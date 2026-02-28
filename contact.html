@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Contact | Accounting & Systems</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="container header-inner">
+    <div class="brand">
+      <h1>Accounting & Systems</h1>
+      <p>Contact</p>
+    </div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="services.html">Services</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="login.html">Login</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+    <section class="card">
+      <h2>Get in touch</h2>
+      <p class="small">Tell us what you need help with and we’ll reply.</p>
+
+      <!-- NETLIFY FORM -->
+      <form 
+        name="contact"
+        method="POST"
+        data-netlify="true"
+        netlify-honeypot="bot-field"
+        action="/thank-you.html"
+      >
+        <!-- Required hidden field -->
+        <input type="hidden" name="form-name" value="contact">
+
+        <!-- Honeypot field -->
+        <p style="display:none;">
+          <label>Don’t fill this out if you're human:
+            <input name="bot-field">
+          </label>
+        </p>
+
+        <div>
+          <label for="name">Name</label>
+          <input id="name" name="name" type="text" required>
+        </div>
+
+        <div>
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required>
+        </div>
+
+        <div>
+          <label for="service">Service needed</label>
+          <select name="service" required>
+            <option value="">Select one</option>
+            <option>Bookkeeping / Xero clean-up</option>
+            <option>BAS / GST support</option>
+            <option>Payroll review</option>
+            <option>Ongoing bookkeeping</option>
+            <option>Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="message">Message</label>
+          <textarea id="message" name="message" required></textarea>
+        </div>
+
+        <button type="submit">Send message</button>
+
+        <p class="small">
+          Your details are kept confidential.
+        </p>
+      </form>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="container">© 2026 Accounting & Systems</div>
+</footer>
+
+</body>
+</html>

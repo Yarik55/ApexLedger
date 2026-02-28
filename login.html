@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login | Accounting & Systems</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="container header-inner">
+    <div class="brand">
+      <h1>Accounting & Systems</h1>
+      <p>Client portal access</p>
+    </div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="services.html">Services</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="login.html">Login</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+    <section class="card">
+      <h2>Sign in</h2>
+      <p class="small">Authentication will be connected next.</p>
+
+      <div id="msg" class="notice" style="display:none;"></div>
+
+      <form id="loginForm" novalidate>
+        <div>
+          <label for="email">Email</label>
+          <input id="email" type="email" name="email" placeholder="you@example.com" required>
+        </div>
+
+        <div>
+          <label for="password">Password</label>
+          <input id="password" type="password" name="password" placeholder="Minimum 8 characters" required minlength="8">
+        </div>
+
+        <button type="submit">Login</button>
+        <p class="small">Forgot password: coming soon.</p>
+      </form>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="container">© 2026 Accounting & Systems</div>
+</footer>
+
+<script>
+  const form = document.getElementById("loginForm");
+  const msg = document.getElementById("msg");
+
+  function show(text, isError=false){
+    msg.style.display = "block";
+    msg.textContent = text;
+    msg.className = "notice" + (isError ? " error" : "");
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const email = document.getElementById("email").value.trim();
+    const pw = document.getElementById("password").value;
+
+    if (!email.includes("@")) return show("Please enter a valid email.", true);
+    if (pw.length < 8) return show("Password must be at least 8 characters.", true);
+
+    show("Login submitted (placeholder). Next: connect Supabase/Firebase auth.");
+    form.reset();
+  });
+</script>
+
+</body>
+</html>
