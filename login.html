@@ -22,7 +22,7 @@
     </nav>
   </div>
 </header>
- 
+
 <main>
   <div class="container" style="max-width: 480px;">
     <div class="fade-up" style="padding-top: 24px;">
@@ -30,7 +30,7 @@
       <h2 style="margin-bottom: 4px;">Sign in</h2>
       <p class="small" style="margin-bottom: 4px;">Authentication will be connected next.</p>
     </div>
- 
+
     <section class="card fade-up-2" style="margin-top: 24px;">
       <div id="msg" class="notice" style="display:none; margin-bottom: 16px;"></div>
       <form id="loginForm" novalidate style="max-width: 100%;">
@@ -51,30 +51,30 @@
         </p>
       </form>
     </section>
- 
+
     <p class="small fade-up-3" style="text-align: center; margin-top: 20px;">
       Don't have an account? <a href="contact.html" style="color: var(--gold-light); text-decoration: none;">Contact us to get set up.</a>
     </p>
   </div>
 </main>
- 
+
 <footer>
   <div class="container footer-inner">
     <div class="footer-brand">Apex<span>Ledger</span></div>
-    <div class="footer-copy">© 2026 ApexLedger</div>
+    <div class="footer-brand">Apex<span>Ledger</span></div><div class="footer-copy">© 2026 ApexLedger</div>
   </div>
 </footer>
- 
+
 <script>
   const form = document.getElementById("loginForm");
   const msg  = document.getElementById("msg");
- 
+
   function show(text, type = ""){
     msg.style.display = "block";
     msg.textContent   = text;
     msg.className     = "notice" + (type ? " " + type : "");
   }
- 
+
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const email = document.getElementById("email").value.trim();
