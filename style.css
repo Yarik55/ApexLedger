@@ -2,6 +2,7 @@
 /* Aesthetic: Deep navy corporate — midnight blues, electric accents, precision typography */
 
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+/* Prevent Syne from stretching on some platforms */
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -43,6 +44,9 @@
   --radius: 6px;
   --radius-lg: 10px;
   --radius-xl: 14px;
+
+  /* Legacy alias used in older HTML */
+  --muted-light: #8fa3c0;
 }
 
 html { scroll-behavior: smooth; }
@@ -92,10 +96,11 @@ header {
   margin: 0;
   font-family: 'Syne', sans-serif;
   font-size: 19px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.01em;
   color: var(--text);
   line-height: 1;
+  font-stretch: normal;
 }
 
 .brand h1 span { color: var(--blue-bright); }
@@ -168,12 +173,13 @@ main { padding: 52px 0 80px; }
 .hero h2 {
   font-family: 'Syne', sans-serif;
   font-size: clamp(34px, 5.5vw, 56px);
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   margin: 0 0 24px;
   color: var(--text);
   max-width: 680px;
+  font-stretch: normal;
 }
 
 .hero h2 em {
@@ -208,11 +214,12 @@ main { padding: 52px 0 80px; }
 .stat-number {
   font-family: 'Syne', sans-serif;
   font-size: 32px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--blue-bright);
   line-height: 1;
   margin-bottom: 5px;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
+  font-stretch: normal;
 }
 
 .stat-label {
@@ -249,9 +256,10 @@ main { padding: 52px 0 80px; }
 .page-band h2 {
   font-family: 'Syne', sans-serif;
   font-size: clamp(28px, 4vw, 44px);
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   margin: 10px 0 14px;
+  font-stretch: normal;
 }
 
 /* ─── SECTION LABEL ─── */
@@ -269,10 +277,11 @@ h2 {
   margin: 0 0 14px;
   font-family: 'Syne', sans-serif;
   font-size: 24px;
-  font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
   color: var(--text);
+  font-stretch: normal;
 }
 
 h3 {
@@ -375,10 +384,11 @@ p { margin: 10px 0; }
 .pricing-header h3 {
   font-family: 'Syne', sans-serif;
   font-size: 19px;
-  font-weight: 800;
+  font-weight: 700;
   color: #fff;
   margin: 0 0 8px;
   line-height: 1.2;
+  font-stretch: normal;
 }
 
 .pricing-header p {
@@ -394,10 +404,11 @@ p { margin: 10px 0; }
 
 .pricing-price strong {
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 700;
   font-family: 'Syne', sans-serif;
   color: #fff;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
+  font-stretch: normal;
 }
 
 .pricing-body { padding: 22px 26px; flex: 1; }
@@ -497,6 +508,19 @@ p { margin: 10px 0; }
 .btn-outline-blue:hover {
   background: rgba(59, 130, 246, 0.2);
   border-color: rgba(59, 130, 246, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-dark {
+  background: rgba(59, 130, 246, 0.08);
+  color: var(--blue-bright);
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.btn-dark:hover {
+  background: rgba(59, 130, 246, 0.16);
+  border-color: rgba(59, 130, 246, 0.45);
+  color: var(--text);
   transform: translateY(-1px);
 }
 
@@ -635,8 +659,9 @@ footer { border-top: 1px solid var(--border); padding: 28px 0; }
 .footer-brand {
   font-family: 'Syne', sans-serif;
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text-secondary);
+  font-stretch: normal;
 }
 
 .footer-brand span { color: var(--blue-bright); }
