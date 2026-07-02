@@ -2,341 +2,678 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard | ApexLedger</title>
+  <title>Client Portal | ApexLedger</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="style.css">
-  <style>
-    .tab-bar { display: flex; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
-    .tab-btn {
-      background: var(--card); color: var(--text-secondary);
-      border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 8px 18px; font-family: inherit; font-size: 14px; cursor: pointer;
-    }
-    .tab-btn.active { background: var(--blue-dim); color: var(--blue-bright); border-color: var(--border-bright); }
-    .row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
-    .row:last-child { border-bottom: none; }
-    .row .name { color: var(--text-secondary); }
-    .row .val { font-variant-numeric: tabular-nums; font-weight: 600; }
-    .row.total { border-top: 1px solid var(--border-mid); margin-top: 4px; padding-top: 12px; }
-    .row.total .name, .row.total .val { color: var(--text); font-weight: 700; }
-    .pos { color: var(--success); }
-    .neg { color: var(--error-text); }
-    .bar-bg { height: 6px; background: var(--navy-600); border-radius: 3px; margin-top: 6px; overflow: hidden; }
-    .bar-fill { height: 100%; border-radius: 3px; background: var(--blue); }
-    .bar-fill.over { background: #ef4444; }
-    .budget-row { padding: 12px 0; border-bottom: 1px solid var(--border); }
-    .budget-row:last-child { border-bottom: none; }
-    .budget-top { display: flex; justify-content: space-between; font-size: 14px; }
-    select#clientPicker {
-      background: var(--card); color: var(--text); border: 1px solid var(--border-mid);
-      border-radius: var(--radius); padding: 6px 10px; font-family: inherit; font-size: 13px;
-    }
-    .signout-btn {
-      background: none; border: 1px solid var(--border-mid); color: var(--text-secondary);
-      border-radius: var(--radius); padding: 6px 14px; font-family: inherit; font-size: 13px; cursor: pointer;
-    }
-    .signout-btn:hover { color: var(--text); border-color: var(--border-bright); }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="portal.css">
 </head>
-<body>
-<header>
-  <div class="container header-inner">
-    <div class="brand">
-      <h1>Apex<span>Ledger</span></h1>
-      <p>Client portal</p>
+<body class="portal">
+
+<header class="p-header">
+  <div class="p-container p-header-inner">
+    <a class="p-brand" href="index.html">
+      <span class="p-brand-icon">🧾</span>
+      <span class="p-brand-name">ApexLedger</span>
+    </a>
+    <div class="p-header-actions">
+      <select id="clientPick" class="p-clientpick" style="display:none" aria-label="Select client"></select>
+      <div style="position:relative">
+        <button class="p-iconbtn" id="bellBtn" aria-label="Notifications">🔔<span class="p-badge" id="bellBadge" style="display:none"></span></button>
+        <div class="p-notif-panel" id="notifPanel" style="display:none"></div>
+      </div>
+      <button class="p-iconbtn" id="chatBtn" aria-label="Messages">💬<span class="p-badge" id="chatBadge" style="display:none"></span></button>
+      <button class="p-userchip" id="userChip">👤 <span id="userChipName">…</span></button>
+      <button class="p-logout" id="logoutBtn">⇥ Logout</button>
     </div>
-    <nav style="display:flex; align-items:center; gap:16px;">
-      <a href="index.html">Home</a>
-      <button class="signout-btn" id="signoutBtn">Sign out</button>
-    </nav>
   </div>
 </header>
 
-<main>
-  <div class="container" style="max-width: 760px;">
-    <div class="fade-up" style="padding-top: 24px; display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap;">
-      <div>
-        <div class="section-label" style="margin-bottom: 8px;">Dashboard</div>
-        <h2 id="welcome" style="margin-bottom: 2px;">Loading…</h2>
-        <p class="small" id="tierLine"></p>
-      </div>
-      <div id="pickerWrap" style="display:none;">
-        <label class="small" for="clientPicker" style="display:block; margin-bottom:4px;">Viewing client</label>
-        <select id="clientPicker"></select>
-      </div>
-    </div>
-
-    <div id="msg" class="notice" style="display:none; margin-top: 16px;"></div>
-
-    <div class="tab-bar fade-up-2">
-      <button class="tab-btn active" data-tab="pl">Profit &amp; Loss</button>
-      <button class="tab-btn" data-tab="bs">Balance Sheet</button>
-      <button class="tab-btn" data-tab="budget">Budget</button>
-    </div>
-
-    <section class="card fade-up-3" id="panel-pl">
-      <div class="section-label" id="plPeriod">This month</div>
-      <h2 style="font-size: 18px;">Profit &amp; Loss</h2>
-      <div id="plContent"><p class="small">Loading…</p></div>
-    </section>
-
-    <section class="card fade-up-3" id="panel-bs" style="display:none;">
-      <div class="section-label">As at today</div>
-      <h2 style="font-size: 18px;">Balance Sheet</h2>
-      <div id="bsContent"><p class="small">Loading…</p></div>
-    </section>
-
-    <section class="card fade-up-3" id="panel-budget" style="display:none;">
-      <div class="section-label" id="budgetPeriod">This month</div>
-      <h2 style="font-size: 18px;">Budget vs actual</h2>
-      <div id="budgetContent"><p class="small">Loading…</p></div>
-    </section>
+<div class="p-container">
+  <div class="p-welcome">
+    <h1 id="welcomeTitle">Welcome back!</h1>
+    <p>Manage your finances, tax returns, documents and messages all in one place.</p>
   </div>
-</main>
 
-<footer>
-  <div class="container footer-inner">
-    <div class="footer-brand">Apex<span>Ledger</span></div>
-    <div class="footer-copy">© 2026 ApexLedger</div>
+  <div id="errorBox" class="p-error" style="display:none"></div>
+
+  <div class="p-stats" id="statCards"></div>
+
+  <div class="p-panel">
+    <nav class="p-tabs" id="tabBar" aria-label="Portal sections"></nav>
+    <div class="p-tabbody" id="tabBody"><div class="p-empty">Loading…</div></div>
   </div>
-</footer>
+</div>
+
+<input type="file" id="fileInput" style="display:none" accept=".pdf,.jpg,.jpeg,.png,.heic,.xlsx,.csv,.docx">
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase.js"></script>
 <script>
-  const TIER_LABELS = {
-    finance_only:    'Finance tracking',
-    finance_tax:     'Finance + Tax return',
-    finance_tax_bas: 'Finance + Tax + BAS',
-  };
+// ============================================================================
+// ApexLedger client portal — vanilla JS against Supabase with RLS.
+// ============================================================================
+const TABS = [
+  { id: 'overview',   label: 'Overview' },
+  { id: 'returns',    label: 'Tax Returns' },
+  { id: 'documents',  label: 'Documents' },
+  { id: 'forms',      label: 'Forms' },
+  { id: 'letters',    label: 'Engagement Letters' },
+  { id: 'services',   label: 'Services' },
+  { id: 'financials', label: 'Financials' },
+  { id: 'calendar',   label: 'Calendar' },
+  { id: 'messages',   label: 'Messages' },
+];
+const TIER_LABELS = { finance_only: 'Finance tracking', finance_tax: 'Finance + Tax return', finance_tax_bas: 'Finance + Tax + BAS' };
+const RETURN_STATUS = {
+  not_started:   { label: 'Not started',   pill: 'slate', pct: 5 },
+  in_progress:   { label: 'In Progress',   pill: 'amber', pct: 45 },
+  client_review: { label: 'Your review',   pill: 'amber', pct: 70 },
+  client_approved:{ label: 'Approved',     pill: 'blue',  pct: 85 },
+  lodged:        { label: 'Completed',     pill: 'green', pct: 100 },
+  assessed:      { label: 'Assessed',      pill: 'green', pct: 100 },
+};
+const BAS_STATUS = {
+  draft:           { label: 'In preparation', pill: 'slate', pct: 25 },
+  in_review:       { label: 'In review',      pill: 'slate', pct: 55 },
+  client_review:   { label: 'Awaiting your approval', pill: 'amber', pct: 75 },
+  client_approved: { label: 'Approved — ready to lodge', pill: 'blue', pct: 90 },
+  lodged:          { label: 'Lodged',         pill: 'green', pct: 100 },
+  amended:         { label: 'Amended',        pill: 'slate', pct: 100 },
+};
+const FOLDER_ICONS = { tax_returns: '🧾', bas: '📋', receipts: '🧾', identity: '🪪', contracts: '📄', correspondence: '✉️', workpapers: '🗂️', other: '📁' };
 
-  let clientId = null;
+const S = {
+  userId: null, profile: null, clients: [], client: null,
+  folders: [], docs: [], returns: [], bas: [], accounts: [], txns: [], budgets: [], notifs: [],
+  thread: null, messages: [], channel: null,
+  activeTab: 'overview', selectedFolder: null, finTab: 'pl',
+};
+const isStaff = () => S.profile && (S.profile.role === 'practitioner' || S.profile.role === 'admin');
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const el = (id) => document.getElementById(id);
+const showError = (m) => { el('errorBox').textContent = m; el('errorBox').style.display = 'block'; };
+const fmtLong = (iso) => new Date(iso).toLocaleDateString('en-AU', { year: 'numeric', month: 'long', day: 'numeric' });
+const fmtBytes = (b) => !b ? '—' : b < 1048576 ? Math.round(b / 1024) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
 
-  function showMsg(text, type = '') {
-    const m = document.getElementById('msg');
-    m.style.display = 'block';
-    m.textContent = text;
-    m.className = 'notice' + (type ? ' ' + type : '');
+// ── Boot ────────────────────────────────────────────────────────────────────
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = 'login.html'; return; }
+  S.userId = session.user.id;
+
+  let { data: profile } = await sb.from('profiles').select('id, role, full_name, email, phone').eq('id', S.userId).maybeSingle();
+  if (!profile) {
+    const ins = await sb.from('profiles').insert({
+      id: S.userId, email: session.user.email,
+      full_name: session.user.user_metadata?.full_name || null, role: 'client',
+    }).select('id, role, full_name, email, phone').single();
+    profile = ins.data;
   }
+  S.profile = profile;
+  el('welcomeTitle').textContent = `Welcome back, ${(profile?.full_name || session.user.email || '').split(' ')[0]}!`;
+  el('userChipName').textContent = profile?.full_name || session.user.email || 'Account';
 
-  // ── Tabs ────────────────────────────────────────────────
-  document.querySelectorAll('.tab-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      ['pl', 'bs', 'budget'].forEach((t) => {
-        document.getElementById('panel-' + t).style.display = t === btn.dataset.tab ? 'block' : 'none';
-      });
+  const { data: clients, error } = await sb.from('clients')
+    .select('id, practice_id, entity_name, service_tier, bas_frequency, onboarding_completed')
+    .is('deleted_at', null).order('entity_name');
+  if (error) { showError(error.message); return; }
+  S.clients = clients || [];
+  if (S.clients.length === 0) {
+    showError('No client engagement is linked to this login yet. Ask your practitioner to connect your account.');
+    renderTabsBar(); renderBody();
+    return;
+  }
+  if (isStaff() && S.clients.length > 1) {
+    const pick = el('clientPick');
+    pick.style.display = 'block';
+    pick.innerHTML = S.clients.map((c) => `<option value="${c.id}">${esc(c.entity_name || 'Unnamed client')}</option>`).join('');
+    pick.onchange = () => selectClient(S.clients.find((c) => c.id === pick.value));
+  }
+  loadNotifications();
+  selectClient(S.clients[0]);
+})();
+
+async function selectClient(client) {
+  S.client = client;
+  S.selectedFolder = null;
+  const [folders, docs, returns, bas, accounts, txns, budgets] = await Promise.all([
+    sb.from('document_folders').select('id, name, parent_folder_id, folder_type, access_level').eq('client_id', client.id).order('name').then((r) => r.data || []),
+    sb.from('documents').select('*').eq('client_id', client.id).is('deleted_at', null).order('created_at', { ascending: false }).then((r) => r.data || []),
+    sb.from('tax_returns').select('*').eq('client_id', client.id).order('financial_year', { ascending: false }).then((r) => r.data || []),
+    sb.from('bas_lodgements').select('id, period_label, period_from, period_to, status, label_9, client_approved_at').eq('client_id', client.id).order('period_to', { ascending: false }).then((r) => r.data || []),
+    sb.from('accounts').select('id, name, account_type, is_bank_account').eq('client_id', client.id).then((r) => r.data || []),
+    sb.from('transactions').select('id, account_id, date, description, amount, category').eq('client_id', client.id).order('date', { ascending: false }).then((r) => r.data || []),
+    sb.from('budgets').select('account_id, monthly_amount').eq('client_id', client.id).then((r) => r.data || []),
+  ]);
+  Object.assign(S, { folders, docs, returns, bas, accounts, txns, budgets });
+  await openThread();
+  renderAll();
+}
+
+function renderAll() { renderStats(); renderTabsBar(); renderBody(); updateChatBadge(); }
+
+// ── Header widgets ──────────────────────────────────────────────────────────
+el('logoutBtn').onclick = async () => { await sb.auth.signOut(); window.location.href = 'login.html'; };
+el('chatBtn').onclick = () => switchTab('messages');
+el('userChip').onclick = () => switchTab('account');
+
+el('bellBtn').onclick = async () => {
+  const panel = el('notifPanel');
+  if (panel.style.display === 'block') { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+  panel.innerHTML = S.notifs.length === 0
+    ? '<div class="p-notif-empty">No notifications yet.</div>'
+    : S.notifs.map((n) => `
+        <div class="p-notif-item">
+          <p class="p-notif-title">${n.read_at ? '' : '🔵 '}${esc(n.title)}</p>
+          ${n.body ? `<p class="p-notif-body">${esc(n.body)}</p>` : ''}
+          <span class="p-notif-time">${fmtLong(n.created_at)}</span>
+        </div>`).join('');
+  await sb.from('notifications').update({ read_at: new Date().toISOString() }).eq('recipient_id', S.userId).is('read_at', null);
+  S.notifs = S.notifs.map((n) => ({ ...n, read_at: n.read_at || new Date().toISOString() }));
+  el('bellBadge').style.display = 'none';
+};
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#bellBtn') && !e.target.closest('#notifPanel')) el('notifPanel').style.display = 'none';
+});
+
+async function loadNotifications() {
+  const { data } = await sb.from('notifications').select('*').eq('recipient_id', S.userId).order('created_at', { ascending: false }).limit(15);
+  S.notifs = data || [];
+  const unread = S.notifs.filter((n) => !n.read_at).length;
+  el('bellBadge').textContent = unread;
+  el('bellBadge').style.display = unread > 0 ? 'flex' : 'none';
+}
+
+function updateChatBadge() {
+  const unread = S.messages.filter((m) => m.sender_id !== S.userId && !m.read_at).length;
+  el('chatBadge').textContent = unread;
+  el('chatBadge').style.display = unread > 0 ? 'flex' : 'none';
+}
+
+// ── Stats ───────────────────────────────────────────────────────────────────
+function renderStats() {
+  const inProgress = S.returns.filter((r) => !['lodged', 'assessed'].includes(r.status)).length
+                   + S.bas.filter((b) => !['lodged', 'amended'].includes(b.status)).length;
+  const forms = S.docs.filter((d) => ['tax_return', 'bas_form'].includes(d.document_type)).length;
+  el('statCards').innerHTML = `
+    <div class="p-stat"><div><p class="p-stat-label">Total Returns</p><p class="p-stat-value">${S.returns.length}</p></div><span class="p-stat-icon">📄</span></div>
+    <div class="p-stat amber"><div><p class="p-stat-label">In Progress</p><p class="p-stat-value">${inProgress}</p></div><span class="p-stat-icon">🕐</span></div>
+    <div class="p-stat"><div><p class="p-stat-label">Documents</p><p class="p-stat-value">${S.docs.length}</p></div><span class="p-stat-icon">📤</span></div>
+    <div class="p-stat"><div><p class="p-stat-label">Ready Forms</p><p class="p-stat-value">${forms}</p></div><span class="p-stat-icon">✅</span></div>`;
+}
+
+// ── Tabs ────────────────────────────────────────────────────────────────────
+function renderTabsBar() {
+  el('tabBar').innerHTML = TABS.map((t) =>
+    `<button class="p-tab ${S.activeTab === t.id ? 'active' : ''}" data-tab="${t.id}">${t.label}</button>`).join('');
+  el('tabBar').querySelectorAll('.p-tab').forEach((btn) => { btn.onclick = () => switchTab(btn.dataset.tab); });
+}
+function switchTab(id) { S.activeTab = id; renderTabsBar(); renderBody(); }
+
+function renderBody() {
+  if (!S.client) { el('tabBody').innerHTML = '<div class="p-empty">Nothing to show until your account is connected.</div>'; return; }
+  const render = {
+    overview: renderOverview, returns: renderReturns, documents: renderDocuments,
+    forms: renderForms, letters: renderLetters, services: renderServices,
+    financials: renderFinancials, calendar: renderCalendar, messages: renderMessages,
+    account: renderAccount,
+  }[S.activeTab];
+  render();
+}
+
+// ── Overview ────────────────────────────────────────────────────────────────
+function renderOverview() {
+  const activity = [
+    ...S.returns.filter((r) => r.lodgement_date).map((r) => ({
+      date: r.lodgement_date, cls: 'green', icon: '✅',
+      title: `FY${r.financial_year} Tax Return Completed`,
+    })),
+    ...S.docs.slice(0, 6).map((d) => ({
+      date: d.created_at, cls: 'blue', icon: '📤',
+      title: `${d.file_name} Uploaded`,
+    })),
+    ...S.txns.slice(0, 3).map((t) => ({
+      date: t.date, cls: 'slate', icon: Number(t.amount) >= 0 ? '💰' : '💸',
+      title: `${esc(t.description || t.category || 'Transaction')} — ${Number(t.amount) >= 0 ? '+' : '−'}${fmtMoney(t.amount)}`,
+    })),
+  ].sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 5);
+
+  el('tabBody').innerHTML = `
+    <h2>Recent Activity</h2>
+    ${activity.length === 0
+      ? '<div class="p-empty">No activity yet — add transactions in the app or upload a document.</div>'
+      : `<div class="p-activity">${activity.map((a) => `
+          <div class="p-activity-row ${a.cls}">
+            <span>${a.icon}</span>
+            <div><p class="p-activity-title">${a.title}</p><p class="p-activity-date">${fmtLong(a.date)}</p></div>
+          </div>`).join('')}</div>`}
+    <h2>Quick Actions</h2>
+    <div class="p-quick">
+      <button class="p-btn outline" id="qaUpload">📤 Upload New Document</button>
+      <button class="p-btn ghost" id="qaForms">📥 Download Tax Forms</button>
+    </div>`;
+  el('qaUpload').onclick = () => switchTab('documents');
+  el('qaForms').onclick = () => switchTab('forms');
+}
+
+// ── Tax Returns ─────────────────────────────────────────────────────────────
+function renderReturns() {
+  el('tabBody').innerHTML = `
+    <h2>Tax Returns</h2>
+    ${S.returns.length === 0
+      ? '<div class="p-empty">No tax returns on file yet. They appear here once your accountant starts preparing one.</div>'
+      : `<table class="p-table">
+          <thead><tr><th>Year</th><th>Type</th><th>Status</th><th>Started</th><th>Completed</th></tr></thead>
+          <tbody>${S.returns.map((r) => {
+            const m = RETURN_STATUS[r.status] || { label: r.status, pill: 'slate' };
+            return `<tr>
+              <td><strong>FY${esc(r.financial_year)}</strong></td>
+              <td style="text-transform:capitalize">${esc(r.return_type || '—')}</td>
+              <td><span class="p-pill ${m.pill}">${m.label}</span></td>
+              <td>${r.created_at ? r.created_at.split('T')[0] : '—'}</td>
+              <td>${r.lodgement_date || '—'}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>`}`;
+}
+
+// ── Documents ───────────────────────────────────────────────────────────────
+const clientCanUpload = (f) => isStaff() || ['receipts', 'identity'].includes(f.folder_type);
+
+function renderDocuments() {
+  const roots = S.folders.filter((f) => !f.parent_folder_id);
+  const docsInTree = (folderId) => {
+    const childIds = S.folders.filter((f) => f.parent_folder_id === folderId).map((f) => f.id);
+    return S.docs.filter((d) => d.folder_id === folderId || childIds.includes(d.folder_id));
+  };
+  const shown = S.selectedFolder ? docsInTree(S.selectedFolder) : S.docs;
+  const selected = S.folders.find((f) => f.id === S.selectedFolder);
+
+  el('tabBody').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <h2 style="margin:0">Your Documents</h2>
+      <button class="p-btn primary" id="uploadBtn">📤 Upload</button>
+    </div>
+    <div class="p-folders">
+      ${roots.map((f) => `
+        <button class="p-folder ${S.selectedFolder === f.id ? 'selected' : ''}" data-folder="${f.id}">
+          <span class="p-folder-icon">${FOLDER_ICONS[f.folder_type] || '📁'}</span>
+          <span><p class="p-folder-name">${esc(f.name)}${f.access_level === 'practitioner_only' ? ' 🔒' : ''}</p>
+          <p class="p-folder-count">${docsInTree(f.id).length} documents</p></span>
+        </button>`).join('')}
+    </div>
+    <div id="docProgress" style="display:none;margin-bottom:12px"><div class="p-progress"><div id="docProgressFill" style="width:0%"></div></div></div>
+    ${selected ? `<p style="font-size:13px;color:var(--text-2);margin:0 0 12px">Showing: <strong>${esc(selected.name)}</strong> · <button class="p-link" id="clearFolder">Show all</button></p>` : ''}
+    <div id="docList">
+      ${shown.length === 0
+        ? '<div class="p-empty">No documents here yet.</div>'
+        : shown.map(docRow).join('')}
+    </div>`;
+
+  el('tabBody').querySelectorAll('[data-folder]').forEach((btn) => {
+    btn.onclick = () => { S.selectedFolder = S.selectedFolder === btn.dataset.folder ? null : btn.dataset.folder; renderDocuments(); };
+  });
+  const clear = el('clearFolder'); if (clear) clear.onclick = () => { S.selectedFolder = null; renderDocuments(); };
+  el('uploadBtn').onclick = startUpload;
+  bindDocActions();
+}
+
+function docRow(d) {
+  return `
+    <div class="p-doc">
+      <span class="p-doc-icon">${d.file_type?.startsWith('image/') ? '🖼️' : '📄'}</span>
+      <span><p class="p-doc-name">${esc(d.file_name)}</p>
+      <p class="p-doc-meta">${esc((d.document_type || 'document').replace('_', ' '))} · ${fmtBytes(d.file_size_bytes)} · Uploaded ${d.created_at.split('T')[0]}${d.is_signed ? ' · ✓ Signed' : ''}</p></span>
+      <span class="p-doc-actions"><button class="p-link" data-dl="${d.id}">⬇ Download</button></span>
+    </div>`;
+}
+
+function bindDocActions() {
+  document.querySelectorAll('[data-dl]').forEach((btn) => {
+    btn.onclick = async () => {
+      const doc = S.docs.find((d) => d.id === btn.dataset.dl);
+      if (!doc) return;
+      const { data, error } = await sb.storage.from(doc.storage_bucket).createSignedUrl(doc.storage_path, 300, { download: doc.file_name });
+      if (error) { showError(error.message); return; }
+      sb.from('document_access_log').insert({ document_id: doc.id, accessed_by: S.userId, action: 'download', user_agent: navigator.userAgent }).then(() => {});
+      window.open(data.signedUrl, '_blank');
+    };
+  });
+}
+
+function startUpload() {
+  const allowed = S.folders.filter((f) => !f.parent_folder_id && clientCanUpload(f));
+  if (allowed.length === 0) { showError('No folders you can upload into.'); return; }
+  const names = allowed.map((f, i) => `${i + 1}. ${f.name}`).join('\n');
+  const pick = prompt(`Upload into which folder?\n${names}\n\nEnter a number:`, '1');
+  const idx = parseInt(pick, 10) - 1;
+  if (isNaN(idx) || !allowed[idx]) return;
+  const folder = allowed[idx];
+  const input = el('fileInput');
+  input.onchange = async () => {
+    const file = input.files[0];
+    input.value = '';
+    if (!file) return;
+    if (file.size > 25 * 1024 * 1024) { showError('File is over the 25MB limit.'); return; }
+    const safe = file.name.replace(/[^\w.\-() ]+/g, '_');
+    const path = `${S.client.practice_id}/${S.client.id}/${folder.folder_type || 'other'}/${Date.now()}_${safe}`;
+    el('docProgress').style.display = 'block';
+    el('docProgressFill').style.width = '40%';
+    const { error: upErr } = await sb.storage.from('client-documents').upload(path, file, { contentType: file.type || 'application/octet-stream' });
+    if (upErr) { el('docProgress').style.display = 'none'; showError(upErr.message); return; }
+    el('docProgressFill').style.width = '80%';
+    const typeMap = { tax_returns: 'tax_return', bas: 'bas_form', receipts: 'receipt', identity: 'identity', contracts: 'contract', correspondence: 'correspondence', workpapers: 'workpaper' };
+    const { data: doc, error: insErr } = await sb.from('documents').insert({
+      client_id: S.client.id, folder_id: folder.id, uploaded_by: S.userId,
+      file_name: file.name, file_type: file.type || null, file_size_bytes: file.size,
+      storage_path: path, storage_bucket: 'client-documents',
+      document_type: typeMap[folder.folder_type] || 'other',
+    }).select().single();
+    el('docProgress').style.display = 'none';
+    if (insErr) { showError(insErr.message); return; }
+    sb.from('document_access_log').insert({ document_id: doc.id, accessed_by: S.userId, action: 'upload', user_agent: navigator.userAgent }).then(() => {});
+    S.docs.unshift(doc);
+    renderStats(); renderDocuments();
+  };
+  input.click();
+}
+
+// ── Forms ───────────────────────────────────────────────────────────────────
+function renderForms() {
+  const formDocs = S.docs.filter((d) => ['tax_return', 'bas_form'].includes(d.document_type));
+  const inPrep = S.returns.filter((r) => !['lodged', 'assessed'].includes(r.status));
+  el('tabBody').innerHTML = `
+    <h2>Tax Forms</h2>
+    ${formDocs.length === 0 && inPrep.length === 0 ? '<div class="p-empty">Prepared returns and BAS forms appear here for download and approval.</div>' : ''}
+    ${formDocs.map((d) => {
+      const linkedBas = d.related_entity_type === 'bas_lodgement' ? S.bas.find((b) => b.id === d.related_entity_id) : null;
+      const needsApproval = !isStaff() && linkedBas && linkedBas.status === 'client_review' && !d.is_signed;
+      return `
+        <div class="p-doc">
+          <span class="p-doc-icon" style="background:var(--green-bg)">📄</span>
+          <span><p class="p-doc-name">${esc(d.file_name)}</p>
+          <p class="p-doc-meta">
+            ${needsApproval
+              ? '<span class="p-pill amber">● Awaiting your approval</span>'
+              : d.is_signed ? '<span class="p-pill green">✓ Signed</span>' : '<span class="p-pill green">✓ Ready for Download</span>'}
+            · ${d.created_at.split('T')[0]}
+          </p></span>
+          <span class="p-doc-actions">
+            ${needsApproval ? `<button class="p-btn primary" data-sign="${d.id}">Approve &amp; sign</button>` : ''}
+            <button class="p-btn ghost" data-dl="${d.id}">⬇ Download</button>
+          </span>
+        </div>`;
+    }).join('')}
+    ${inPrep.map((r) => `
+      <div class="p-doc">
+        <span class="p-doc-icon" style="background:var(--amber-bg)">📄</span>
+        <span><p class="p-doc-name">FY${esc(r.financial_year)} Tax Return</p>
+        <p class="p-doc-meta"><span class="p-pill amber">🕐 In Preparation</span></p></span>
+      </div>`).join('')}`;
+  bindDocActions();
+  document.querySelectorAll('[data-sign]').forEach((btn) => {
+    btn.onclick = async () => {
+      const doc = S.docs.find((d) => d.id === btn.dataset.sign);
+      if (!doc) return;
+      if (!confirm('By clicking OK you approve this BAS for lodgement with the ATO. Your approval is recorded with a timestamp against your login.')) return;
+      const { error: e1 } = await sb.rpc('approve_bas', { p_bas_id: doc.related_entity_id });
+      if (e1) { showError(e1.message); return; }
+      const { error: e2 } = await sb.rpc('sign_bas_document', { p_document_id: doc.id });
+      if (e2) { showError(e2.message); return; }
+      doc.is_signed = true;
+      const bas = S.bas.find((b) => b.id === doc.related_entity_id);
+      if (bas) bas.status = 'client_approved';
+      renderForms();
+    };
+  });
+}
+
+// ── Engagement Letters ──────────────────────────────────────────────────────
+function renderLetters() {
+  const contractFolders = S.folders.filter((f) => f.folder_type === 'contracts').map((f) => f.id);
+  const letters = S.docs.filter((d) => contractFolders.includes(d.folder_id));
+  el('tabBody').innerHTML = `
+    <h2>Engagement Letters</h2>
+    ${letters.length === 0
+      ? '<div class="p-empty">Your engagement letter and agreements appear here once uploaded by the practice.</div>'
+      : letters.map(docRow).join('')}`;
+  bindDocActions();
+}
+
+// ── Services ────────────────────────────────────────────────────────────────
+function renderServices() {
+  const cards = [];
+  cards.push({
+    title: TIER_LABELS[S.client.service_tier] || 'Plan not set',
+    sub: 'Your ApexLedger plan — app, dashboards and advisor chat',
+    type: 'Subscription', period: 'Ongoing', status: { label: 'Active', pill: 'green' }, pct: null,
+  });
+  S.returns.filter((r) => !['assessed'].includes(r.status)).forEach((r) => {
+    const m = RETURN_STATUS[r.status] || { label: r.status, pill: 'slate', pct: 20 };
+    cards.push({
+      title: `FY${r.financial_year} Tax Return`, sub: 'Preparation and lodgement of your income tax return',
+      type: 'Tax', period: `FY${r.financial_year}`, status: m, pct: m.pct, updated: r.updated_at,
     });
   });
-
-  document.getElementById('signoutBtn').addEventListener('click', async () => {
-    await sb.auth.signOut();
-    window.location.href = 'login.html';
+  S.bas.filter((b) => !['lodged', 'amended'].includes(b.status)).forEach((b) => {
+    const m = BAS_STATUS[b.status] || { label: b.status, pill: 'slate', pct: 20 };
+    cards.push({
+      title: `BAS — ${b.period_label || b.period_to}`, sub: 'Business activity statement preparation and lodgement',
+      type: 'BAS', period: b.period_label || '', status: m, pct: m.pct,
+    });
   });
+  el('tabBody').innerHTML = `
+    <h2>Services</h2>
+    ${cards.map((c) => `
+      <div class="p-service">
+        <div class="p-service-head">
+          <span><p class="p-service-title">💼 ${esc(c.title)}</p><p class="p-service-sub">${esc(c.sub)}</p></span>
+          <span class="p-pill ${c.status.pill}">${c.status.label}</span>
+        </div>
+        <div class="p-service-grid">
+          <span><p class="p-service-k">Service Type</p><p class="p-service-v">${esc(c.type)}</p></span>
+          <span><p class="p-service-k">Period</p><p class="p-service-v">${esc(c.period)}</p></span>
+          <span><p class="p-service-k">Assigned To</p><p class="p-service-v">Apex Ledger</p></span>
+        </div>
+        ${c.pct != null ? `
+          <div class="p-progress-row"><span>Progress</span><span>${c.pct}%</span></div>
+          <div class="p-progress"><div style="width:${c.pct}%"></div></div>` : ''}
+      </div>`).join('')}`;
+}
 
-  // ── Month range (current calendar month) ────────────────
+// ── Financials (P&L / Balance Sheet / Budget) ──────────────────────────────
+function renderFinancials() {
   const now = new Date();
-  const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
-  const monthLabel = now.toLocaleString('en-AU', { month: 'long', year: 'numeric' });
-  document.getElementById('plPeriod').textContent = monthLabel;
-  document.getElementById('budgetPeriod').textContent = monthLabel;
+  const mStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  const mEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+  const label = now.toLocaleString('en-AU', { month: 'long', year: 'numeric' });
 
-  // ── Boot: auth guard, profile, client selection ─────────
-  (async () => {
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session) { window.location.href = 'login.html'; return; }
-
-    let { data: profile } = await sb
-      .from('profiles')
-      .select('role, full_name')
-      .eq('id', session.user.id)
-      .maybeSingle();
-
-    // First visit from a site signup: create the profiles row so the
-    // welcome shows a name instead of a raw email address.
-    if (!profile) {
-      const { data: created } = await sb
-        .from('profiles')
-        .insert({
-          id: session.user.id,
-          email: session.user.email,
-          full_name: session.user.user_metadata?.full_name || null,
-          role: 'client',
-        })
-        .select('role, full_name')
-        .single();
-      profile = created;
-    }
-
-    const firstName = (profile?.full_name || session.user.email || '').split(' ')[0];
-    document.getElementById('welcome').textContent = `Welcome, ${firstName}`;
-
-    const isStaff = profile && (profile.role === 'practitioner' || profile.role === 'admin');
-
-    // RLS scopes this automatically: clients see one row, staff see all.
-    const { data: clients, error } = await sb
-      .from('clients')
-      .select('id, entity_name, service_tier')
-      .is('deleted_at', null)
-      .order('entity_name');
-
-    const clearPanels = (text) => {
-      ['plContent', 'bsContent', 'budgetContent'].forEach((id) => {
-        document.getElementById(id).innerHTML = `<p class="small">${text}</p>`;
-      });
-    };
-
-    if (error) { showMsg(error.message, 'error'); clearPanels('Unavailable.'); return; }
-    if (!clients || clients.length === 0) {
-      showMsg('No client engagement is linked to this login yet. Ask your practitioner to connect your account.', 'error');
-      clearPanels('Nothing to show until your account is connected.');
-      return;
-    }
-
-    if (isStaff && clients.length > 1) {
-      const wrap = document.getElementById('pickerWrap');
-      const picker = document.getElementById('clientPicker');
-      wrap.style.display = 'block';
-      clients.forEach((c) => {
-        const opt = document.createElement('option');
-        opt.value = c.id;
-        opt.textContent = c.entity_name || 'Unnamed client';
-        picker.appendChild(opt);
-      });
-      picker.addEventListener('change', () => { selectClient(clients.find((c) => c.id === picker.value)); });
-    }
-
-    selectClient(clients[0]);
-  })();
-
-  function selectClient(client) {
-    clientId = client.id;
-    document.getElementById('tierLine').textContent =
-      `${client.entity_name} · ${TIER_LABELS[client.service_tier] || 'No tier set'}`;
-    loadAll();
-  }
-
-  async function loadAll() {
-    const [{ data: accounts }, { data: txns }, { data: budgets }] = await Promise.all([
-      sb.from('accounts').select('id, name, account_type, is_bank_account').eq('client_id', clientId),
-      sb.from('transactions').select('account_id, date, amount, category').eq('client_id', clientId),
-      sb.from('budgets').select('account_id, monthly_amount').eq('client_id', clientId),
-    ]);
-    renderPL(txns || []);
-    renderBS(accounts || [], txns || []);
-    renderBudget(accounts || [], txns || [], budgets || []);
-  }
-
-  const empty = (hint) => `<p class="small">No data yet. ${hint}</p>`;
-
-  // ── P&L: month's cashbook lines grouped by category ─────
-  function renderPL(txns) {
-    const monthTxns = txns.filter((t) => t.date >= monthStart && t.date <= monthEnd);
+  let body = '';
+  if (S.finTab === 'pl') {
+    const monthTxns = S.txns.filter((t) => t.date >= mStart && t.date <= mEnd);
     const income = {}, expenses = {};
     monthTxns.forEach((t) => {
-      const cat = t.category || 'Uncategorised';
-      const amt = Number(t.amount);
-      if (amt >= 0) income[cat] = (income[cat] || 0) + amt;
-      else expenses[cat] = (expenses[cat] || 0) + Math.abs(amt);
+      const cat = t.category || 'Uncategorised', amt = Number(t.amount);
+      if (amt >= 0) income[cat] = (income[cat] || 0) + amt; else expenses[cat] = (expenses[cat] || 0) + Math.abs(amt);
     });
-
-    const totalIn  = Object.values(income).reduce((s, v) => s + v, 0);
-    const totalOut = Object.values(expenses).reduce((s, v) => s + v, 0);
-    const net = totalIn - totalOut;
-
-    if (monthTxns.length === 0) {
-      document.getElementById('plContent').innerHTML = empty('Transactions recorded in the app will appear here.');
-      return;
-    }
-
-    let html = '';
-    Object.entries(income).sort((a, b) => b[1] - a[1]).forEach(([name, v]) => {
-      html += `<div class="row"><span class="name">${name}</span><span class="val pos">+${fmtMoney(v)}</span></div>`;
-    });
-    Object.entries(expenses).sort((a, b) => b[1] - a[1]).forEach(([name, v]) => {
-      html += `<div class="row"><span class="name">${name}</span><span class="val neg">−${fmtMoney(v)}</span></div>`;
-    });
-    html += `<div class="row total"><span class="name">Net ${net >= 0 ? 'surplus' : 'deficit'}</span>
-             <span class="val ${net >= 0 ? 'pos' : 'neg'}">${net < 0 ? '−' : ''}${fmtMoney(net)}</span></div>`;
-    document.getElementById('plContent').innerHTML = html;
-  }
-
-  // ── Balance Sheet: running balance per asset/liability ──
-  function renderBS(accounts, txns) {
+    const tin = Object.values(income).reduce((s, v) => s + v, 0);
+    const tout = Object.values(expenses).reduce((s, v) => s + v, 0);
+    body = monthTxns.length === 0 ? '<div class="p-empty">No transactions this month.</div>' : `
+      ${Object.entries(income).sort((a, b) => b[1] - a[1]).map(([n, v]) => `<div class="p-fin-row"><span class="name">${esc(n)}</span><span class="val pos">+${fmtMoney(v)}</span></div>`).join('')}
+      ${Object.entries(expenses).sort((a, b) => b[1] - a[1]).map(([n, v]) => `<div class="p-fin-row"><span class="name">${esc(n)}</span><span class="val neg">−${fmtMoney(v)}</span></div>`).join('')}
+      <div class="p-fin-row total"><span class="name">Net ${tin - tout >= 0 ? 'surplus' : 'deficit'}</span><span class="val ${tin - tout >= 0 ? 'pos' : 'neg'}">${tin - tout < 0 ? '−' : ''}${fmtMoney(tin - tout)}</span></div>`;
+  } else if (S.finTab === 'bs') {
     const sums = {};
-    txns.forEach((t) => { sums[t.account_id] = (sums[t.account_id] || 0) + Number(t.amount); });
-
-    const assets      = accounts.filter((a) => a.account_type === 'asset');
-    const liabilities = accounts.filter((a) => a.account_type === 'liability');
-
-    if (assets.length === 0 && liabilities.length === 0) {
-      document.getElementById('bsContent').innerHTML = empty('Add bank and liability accounts in the app to build your balance sheet.');
-      return;
-    }
-
-    const totalAssets = assets.reduce((s, a) => s + (sums[a.id] || 0), 0);
-    const totalLiab   = liabilities.reduce((s, a) => s + Math.abs(sums[a.id] || 0), 0);
-    const net = totalAssets - totalLiab;
-
-    let html = '<div class="section-label" style="margin-top:12px;">Assets</div>';
-    assets.forEach((a) => {
-      html += `<div class="row"><span class="name">${a.name}</span><span class="val">${fmtMoney(sums[a.id] || 0)}</span></div>`;
-    });
-    html += `<div class="row total"><span class="name">Total assets</span><span class="val pos">${fmtMoney(totalAssets)}</span></div>`;
-
-    if (liabilities.length > 0) {
-      html += '<div class="section-label" style="margin-top:20px;">Liabilities</div>';
-      liabilities.forEach((a) => {
-        html += `<div class="row"><span class="name">${a.name}</span><span class="val">${fmtMoney(Math.abs(sums[a.id] || 0))}</span></div>`;
-      });
-      html += `<div class="row total"><span class="name">Total liabilities</span><span class="val neg">${fmtMoney(totalLiab)}</span></div>`;
-    }
-
-    html += `<div class="row total" style="margin-top:16px;"><span class="name">Net position</span>
-             <span class="val ${net >= 0 ? 'pos' : 'neg'}">${net < 0 ? '−' : ''}${fmtMoney(net)}</span></div>`;
-    document.getElementById('bsContent').innerHTML = html;
+    S.txns.forEach((t) => { sums[t.account_id] = (sums[t.account_id] || 0) + Number(t.amount); });
+    const assets = S.accounts.filter((a) => a.account_type === 'asset');
+    const liab = S.accounts.filter((a) => a.account_type === 'liability');
+    const ta = assets.reduce((s, a) => s + (sums[a.id] || 0), 0);
+    const tl = liab.reduce((s, a) => s + Math.abs(sums[a.id] || 0), 0);
+    body = assets.length + liab.length === 0 ? '<div class="p-empty">No balance sheet accounts yet.</div>' : `
+      ${assets.map((a) => `<div class="p-fin-row"><span class="name">${esc(a.name)}</span><span class="val">${fmtMoney(sums[a.id] || 0)}</span></div>`).join('')}
+      <div class="p-fin-row total"><span class="name">Total assets</span><span class="val pos">${fmtMoney(ta)}</span></div>
+      ${liab.map((a) => `<div class="p-fin-row"><span class="name">${esc(a.name)}</span><span class="val">${fmtMoney(Math.abs(sums[a.id] || 0))}</span></div>`).join('')}
+      ${liab.length ? `<div class="p-fin-row total"><span class="name">Total liabilities</span><span class="val neg">${fmtMoney(tl)}</span></div>` : ''}
+      <div class="p-fin-row total"><span class="name">Net position</span><span class="val ${ta - tl >= 0 ? 'pos' : 'neg'}">${ta - tl < 0 ? '−' : ''}${fmtMoney(ta - tl)}</span></div>`;
+  } else {
+    const spend = {};
+    S.txns.filter((t) => t.date >= mStart && t.date <= mEnd && Number(t.amount) < 0)
+      .forEach((t) => { const c = t.category || 'Uncategorised'; spend[c] = (spend[c] || 0) + Math.abs(Number(t.amount)); });
+    const accById = {}; S.accounts.forEach((a) => { accById[a.id] = a; });
+    body = S.budgets.length === 0 ? '<div class="p-empty">No budgets set — manage them in the app.</div>' :
+      S.budgets.map((b) => {
+        const name = accById[b.account_id]?.name || 'Category';
+        const spent = spend[name] || 0, budget = Number(b.monthly_amount);
+        const pct = budget > 0 ? Math.round((spent / budget) * 100) : 0;
+        return `
+          <div style="margin-bottom:14px">
+            <div class="p-progress-row"><span>${esc(name)}</span><span class="${spent > budget ? 'neg' : ''}">${fmtMoney(spent)} / ${fmtMoney(budget)}</span></div>
+            <div class="p-progress"><div style="width:${Math.min(100, pct)}%;background:${pct > 100 ? 'var(--red)' : pct > 80 ? 'var(--amber)' : 'var(--blue)'}"></div></div>
+          </div>`;
+      }).join('');
   }
 
-  // ── Budget: monthly amount vs this month's spend ────────
-  function renderBudget(accounts, txns, budgets) {
-    if (budgets.length === 0) {
-      document.getElementById('budgetContent').innerHTML = empty('Budgets set in the app will appear here.');
-      return;
-    }
-    const accById = {};
-    accounts.forEach((a) => { accById[a.id] = a; });
+  el('tabBody').innerHTML = `
+    <h2>Financials <span style="font-size:13px;font-weight:600;color:var(--text-2)">· ${label}</span></h2>
+    <div class="p-subtabs">
+      ${[['pl', 'Profit & Loss'], ['bs', 'Balance Sheet'], ['budget', 'Budget']].map(([id, l]) =>
+        `<button class="p-subtab ${S.finTab === id ? 'active' : ''}" data-fin="${id}">${l}</button>`).join('')}
+    </div>
+    ${body}`;
+  document.querySelectorAll('[data-fin]').forEach((btn) => { btn.onclick = () => { S.finTab = btn.dataset.fin; renderFinancials(); }; });
+}
 
-    const monthTxns = txns.filter((t) => t.date >= monthStart && t.date <= monthEnd && Number(t.amount) < 0);
-    const spendByCategory = {};
-    monthTxns.forEach((t) => {
-      const cat = t.category || 'Uncategorised';
-      spendByCategory[cat] = (spendByCategory[cat] || 0) + Math.abs(Number(t.amount));
-    });
-
-    let totalBudget = 0, totalSpend = 0, html = '';
-    budgets.forEach((b) => {
-      const acc = accById[b.account_id];
-      const name = acc ? acc.name : 'Unknown category';
-      const budget = Number(b.monthly_amount);
-      const spent  = spendByCategory[name] || 0;
-      const pct = budget > 0 ? Math.round((spent / budget) * 100) : 0;
-      totalBudget += budget;
-      totalSpend  += spent;
-      html += `
-        <div class="budget-row">
-          <div class="budget-top">
-            <span class="name" style="color: var(--text-secondary);">${name}</span>
-            <span class="val ${spent > budget ? 'neg' : ''}">${fmtMoney(spent)} / ${fmtMoney(budget)}</span>
-          </div>
-          <div class="bar-bg"><div class="bar-fill${pct > 100 ? ' over' : ''}" style="width:${Math.min(100, pct)}%"></div></div>
-        </div>`;
-    });
-    html += `<div class="row total"><span class="name">Total</span>
-             <span class="val ${totalSpend > totalBudget ? 'neg' : ''}">${fmtMoney(totalSpend)} / ${fmtMoney(totalBudget)}</span></div>`;
-    document.getElementById('budgetContent').innerHTML = html;
+// ── Calendar ────────────────────────────────────────────────────────────────
+function basDue(periodTo, frequency) {
+  const end = new Date(periodTo + 'T00:00:00');
+  if (frequency === 'monthly') return new Date(end.getFullYear(), end.getMonth() + 1, 21);
+  if (end.getMonth() === 11) return new Date(end.getFullYear() + 1, 1, 28);
+  return new Date(end.getFullYear(), end.getMonth() + 1, 28);
+}
+function renderCalendar() {
+  const now = new Date();
+  const fyEndYear = now.getMonth() + 1 >= 7 ? now.getFullYear() + 1 : now.getFullYear();
+  const events = [];
+  S.bas.filter((b) => !['lodged', 'amended'].includes(b.status)).forEach((b) => {
+    events.push({ date: basDue(b.period_to, S.client.bas_frequency), title: `BAS due — ${b.period_label || b.period_to}`, sub: BAS_STATUS[b.status]?.label || b.status });
+  });
+  if (S.client.service_tier !== 'finance_only') {
+    events.push({ date: new Date(fyEndYear - 1, 9, 31), title: 'Income tax return due (self-lodgers)', sub: 'Registered agent programs may extend this — confirm with your accountant' });
   }
+  events.push({ date: new Date(fyEndYear, 5, 30), title: `FY${fyEndYear - 1}-${String(fyEndYear).slice(2)} year end`, sub: 'Last day of the financial year' });
+  const upcoming = events.filter((e) => e.date >= new Date(now.getFullYear(), now.getMonth(), now.getDate())).sort((a, b) => a.date - b.date);
+
+  el('tabBody').innerHTML = `
+    <h2>Key Dates</h2>
+    ${upcoming.length === 0 ? '<div class="p-empty">No upcoming dates.</div>' : upcoming.map((e) => `
+      <div class="p-cal-row">
+        <div class="p-cal-date">${e.date.getDate()}<span>${e.date.toLocaleString('en-AU', { month: 'short' })} ${e.date.getFullYear()}</span></div>
+        <div><p class="p-cal-title">${esc(e.title)}</p><p class="p-cal-sub">${esc(e.sub)}</p></div>
+      </div>`).join('')}`;
+}
+
+// ── Messages ────────────────────────────────────────────────────────────────
+async function openThread() {
+  if (S.channel) { sb.removeChannel(S.channel); S.channel = null; }
+  let { data: conv } = await sb.from('conversations').select('*').eq('client_id', S.client.id).eq('status', 'open').order('created_at').limit(1).maybeSingle();
+  if (!conv) {
+    const ins = await sb.from('conversations').insert({ client_id: S.client.id, practice_id: S.client.practice_id, subject: 'General' }).select().single();
+    conv = ins.data;
+  }
+  S.thread = conv;
+  if (!conv) { S.messages = []; return; }
+  const { data: msgs } = await sb.from('messages').select('*').eq('conversation_id', conv.id).order('created_at');
+  S.messages = msgs || [];
+  S.channel = sb.channel('thread-' + conv.id)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'conversation_id=eq.' + conv.id }, (payload) => {
+      if (!S.messages.some((m) => m.id === payload.new.id)) S.messages.push(payload.new);
+      if (S.activeTab === 'messages') { markRead(); renderMessages(); }
+      updateChatBadge();
+    })
+    .subscribe();
+}
+function markRead() {
+  sb.from('messages').update({ read_at: new Date().toISOString() })
+    .eq('conversation_id', S.thread.id).neq('sender_id', S.userId).is('read_at', null).then(() => {});
+  S.messages = S.messages.map((m) => m.sender_id !== S.userId ? { ...m, read_at: m.read_at || new Date().toISOString() } : m);
+  updateChatBadge();
+}
+function renderMessages() {
+  const other = isStaff() ? (S.client.entity_name || 'Client') : 'Your accountant';
+  el('tabBody').innerHTML = `
+    <h2>Messages <span style="font-size:13px;font-weight:600;color:var(--text-2)">· ${esc(other)}</span></h2>
+    <div class="p-chat">
+      <div class="p-chat-scroll" id="chatScroll">
+        ${S.messages.length === 0
+          ? `<div class="p-empty">💬 No messages yet.<br>${isStaff() ? 'Say hello to your client.' : 'Ask your accountant anything — they reply right here.'}</div>`
+          : S.messages.map((m) => {
+              const mine = m.sender_id === S.userId;
+              const t = new Date(m.created_at).toLocaleString('en-AU', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+              return `<div class="p-msg ${mine ? 'mine' : 'theirs'}"><div class="p-msg-bubble">
+                ${mine ? '' : `<p class="p-msg-sender">${esc(other)}</p>`}
+                <div style="white-space:pre-wrap">${esc(m.body)}</div>
+                <p class="p-msg-time">${t}${mine && m.read_at ? ' · Read' : ''}</p>
+              </div></div>`;
+            }).join('')}
+      </div>
+      <form class="p-chat-compose" id="chatForm">
+        <input id="chatInput" placeholder="Type a message…" autocomplete="off">
+        <button class="p-btn primary" type="submit">Send</button>
+      </form>
+    </div>`;
+  const scroll = el('chatScroll');
+  scroll.scrollTop = scroll.scrollHeight;
+  markRead();
+  el('chatForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const body = el('chatInput').value.trim();
+    if (!body || !S.thread) return;
+    el('chatInput').value = '';
+    const { data: msg, error } = await sb.from('messages').insert({ conversation_id: S.thread.id, sender_id: S.userId, body }).select().single();
+    if (error) { showError(error.message); return; }
+    if (!S.messages.some((m) => m.id === msg.id)) S.messages.push(msg);
+    renderMessages();
+  };
+}
+
+// ── Account (user chip) ─────────────────────────────────────────────────────
+function renderAccount() {
+  el('tabBody').innerHTML = `
+    <h2>Account &amp; Settings</h2>
+    <div class="p-form" style="max-width:480px">
+      <label for="accName">Full name</label>
+      <input id="accName" value="${esc(S.profile?.full_name || '')}">
+      <label for="accPhone">Phone</label>
+      <input id="accPhone" value="${esc(S.profile?.phone || '')}" placeholder="04xx xxx xxx">
+      <label for="accEmail">Email</label>
+      <input id="accEmail" value="${esc(S.profile?.email || '')}" disabled>
+      <p style="font-size:12px;color:var(--muted);margin:-8px 0 16px">Email changes go through your practitioner for identity verification.</p>
+      <button class="p-btn primary" id="accSave">Save changes</button>
+      <span id="accMsg" style="margin-left:10px;font-size:13px;color:var(--green)"></span>
+    </div>
+    <h2 style="margin-top:28px">Your plan</h2>
+    <div class="p-service" style="max-width:480px">
+      <div class="p-service-head">
+        <span><p class="p-service-title">${isStaff() ? 'Practitioner account' : esc(TIER_LABELS[S.client?.service_tier] || 'No plan set')}</p>
+        <p class="p-service-sub">${esc(S.client?.entity_name || '')}</p></span>
+        <span class="p-pill green">Active</span>
+      </div>
+      ${isStaff() ? '' : '<p style="font-size:13px;color:var(--text-2);margin:10px 0 0">Want tax returns or BAS handled too? Send a message from the Messages tab to upgrade.</p>'}
+    </div>`;
+  el('accSave').onclick = async () => {
+    const full_name = el('accName').value.trim();
+    const phone = el('accPhone').value.trim() || null;
+    if (!full_name) { showError('Please enter your name.'); return; }
+    const { error } = await sb.from('profiles').update({ full_name, phone }).eq('id', S.userId);
+    if (error) { showError(error.message); return; }
+    S.profile.full_name = full_name; S.profile.phone = phone;
+    el('userChipName').textContent = full_name;
+    el('accMsg').textContent = '✓ Saved';
+    setTimeout(() => { el('accMsg').textContent = ''; }, 2500);
+  };
+}
 </script>
 </body>
 </html>
