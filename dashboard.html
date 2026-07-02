@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard | ApexLedger</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .tab-bar { display: flex; gap: 8px; margin: 20px 0; flex-wrap: wrap; }
+    .tab-btn {
+      background: var(--card); color: var(--text-secondary);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 8px 18px; font-family: inherit; font-size: 14px; cursor: pointer;
+    }
+    .tab-btn.active { background: var(--blue-dim); color: var(--blue-bright); border-color: var(--border-bright); }
+    .row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+    .row:last-child { border-bottom: none; }
+    .row .name { color: var(--text-secondary); }
+    .row .val { font-variant-numeric: tabular-nums; font-weight: 600; }
+    .row.total { border-top: 1px solid var(--border-mid); margin-top: 4px; padding-top: 12px; }
+    .row.total .name, .row.total .val { color: var(--text); font-weight: 700; }
+    .pos { color: var(--success); }
+    .neg { color: var(--error-text); }
+    .bar-bg { height: 6px; background: var(--navy-600); border-radius: 3px; margin-top: 6px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 3px; background: var(--blue); }
+    .bar-fill.over { background: #ef4444; }
+    .budget-row { padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .budget-row:last-child { border-bottom: none; }
+    .budget-top { display: flex; justify-content: space-between; font-size: 14px; }
+    select#clientPicker {
+      background: var(--card); color: var(--text); border: 1px solid var(--border-mid);
+      border-radius: var(--radius); padding: 6px 10px; font-family: inherit; font-size: 13px;
+    }
+    .signout-btn {
+      background: none; border: 1px solid var(--border-mid); color: var(--text-secondary);
+      border-radius: var(--radius); padding: 6px 14px; font-family: inherit; font-size: 13px; cursor: pointer;
+    }
+    .signout-btn:hover { color: var(--text); border-color: var(--border-bright); }
+  </style>
+</head>
+<body>
+<header>
+  <div class="container header-inner">
+    <div class="brand">
+      <h1>Apex<span>Ledger</span></h1>
+      <p>Client portal</p>
+    </div>
+    <nav style="display:flex; align-items:center; gap:16px;">
+      <a href="index.html">Home</a>
+      <button class="signout-btn" id="signoutBtn">Sign out</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="container" style="max-width: 760px;">
+    <div class="fade-up" style="padding-top: 24px; display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap;">
+      <div>
+        <div class="section-label" style="margin-bottom: 8px;">Dashboard</div>
+        <h2 id="welcome" style="margin-bottom: 2px;">Loading…</h2>
+        <p class="small" id="tierLine"></p>
+      </div>
+      <div id="pickerWrap" style="display:none;">
+        <label class="small" for="clientPicker" style="display:block; margin-bottom:4px;">Viewing client</label>
+        <select id="clientPicker"></select>
+      </div>
+    </div>
+
+    <div id="msg" class="notice" style="display:none; margin-top: 16px;"></div>
+
+    <div class="tab-bar fade-up-2">
+      <button class="tab-btn active" data-tab="pl">Profit &amp; Loss</button>
+      <button class="tab-btn" data-tab="bs">Balance Sheet</button>
+      <button class="tab-btn" data-tab="budget">Budget</button>
+    </div>
+
+    <section class="card fade-up-3" id="panel-pl">
+      <div class="section-label" id="plPeriod">This month</div>
+      <h2 style="font-size: 18px;">Profit &amp; Loss</h2>
+      <div id="plContent"><p class="small">Loading…</p></div>
+    </section>
+
+    <section class="card fade-up-3" id="panel-bs" style="display:none;">
+      <div class="section-label">As at today</div>
+      <h2 style="font-size: 18px;">Balance Sheet</h2>
+      <div id="bsContent"><p class="small">Loading…</p></div>
+    </section>
+
+    <section class="card fade-up-3" id="panel-budget" style="display:none;">
+      <div class="section-label" id="budgetPeriod">This month</div>
+      <h2 style="font-size: 18px;">Budget vs actual</h2>
+      <div id="budgetContent"><p class="small">Loading…</p></div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="container footer-inner">
+    <div class="footer-brand">Apex<span>Ledger</span></div>
+    <div class="footer-copy">© 2026 ApexLedger</div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script>
+  const TIER_LABELS = {
+    finance_only:    'Finance tracking',
+    finance_tax:     'Finance + Tax return',
+    finance_tax_bas: 'Finance + Tax + BAS',
+  };
+
+  let clientId = null;
+
+  function showMsg(text, type = '') {
+    const m = document.getElementById('msg');
+    m.style.display = 'block';
+    m.textContent = text;
+    m.className = 'notice' + (type ? ' ' + type : '');
+  }
+
+  // ── Tabs ────────────────────────────────────────────────
+  document.querySelectorAll('.tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      ['pl', 'bs', 'budget'].forEach((t) => {
+        document.getElementById('panel-' + t).style.display = t === btn.dataset.tab ? 'block' : 'none';
+      });
+    });
+  });
+
+  document.getElementById('signoutBtn').addEventListener('click', async () => {
+    await sb.auth.signOut();
+    window.location.href = 'login.html';
+  });
+
+  // ── Month range (current calendar month) ────────────────
+  const now = new Date();
+  const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+  const monthLabel = now.toLocaleString('en-AU', { month: 'long', year: 'numeric' });
+  document.getElementById('plPeriod').textContent = monthLabel;
+  document.getElementById('budgetPeriod').textContent = monthLabel;
+
+  // ── Boot: auth guard, profile, client selection ─────────
+  (async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = 'login.html'; return; }
+
+    const { data: profile } = await sb
+      .from('profiles')
+      .select('role, full_name')
+      .eq('id', session.user.id)
+      .maybeSingle();
+
+    const firstName = (profile?.full_name || session.user.email || '').split(' ')[0];
+    document.getElementById('welcome').textContent = `Welcome, ${firstName}`;
+
+    const isStaff = profile && (profile.role === 'practitioner' || profile.role === 'admin');
+
+    // RLS scopes this automatically: clients see one row, staff see all.
+    const { data: clients, error } = await sb
+      .from('clients')
+      .select('id, entity_name, service_tier')
+      .is('deleted_at', null)
+      .order('entity_name');
+
+    if (error) { showMsg(error.message, 'error'); return; }
+    if (!clients || clients.length === 0) {
+      showMsg('No client engagement is linked to this login yet. Ask your practitioner to connect your account.', 'error');
+      return;
+    }
+
+    if (isStaff && clients.length > 1) {
+      const wrap = document.getElementById('pickerWrap');
+      const picker = document.getElementById('clientPicker');
+      wrap.style.display = 'block';
+      clients.forEach((c) => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.entity_name || 'Unnamed client';
+        picker.appendChild(opt);
+      });
+      picker.addEventListener('change', () => { selectClient(clients.find((c) => c.id === picker.value)); });
+    }
+
+    selectClient(clients[0]);
+  })();
+
+  function selectClient(client) {
+    clientId = client.id;
+    document.getElementById('tierLine').textContent =
+      `${client.entity_name} · ${TIER_LABELS[client.service_tier] || 'No tier set'}`;
+    loadAll();
+  }
+
+  async function loadAll() {
+    const [{ data: accounts }, { data: txns }, { data: budgets }] = await Promise.all([
+      sb.from('accounts').select('id, name, account_type, is_bank_account').eq('client_id', clientId),
+      sb.from('transactions').select('account_id, date, amount, category').eq('client_id', clientId),
+      sb.from('budgets').select('account_id, monthly_amount').eq('client_id', clientId),
+    ]);
+    renderPL(txns || []);
+    renderBS(accounts || [], txns || []);
+    renderBudget(accounts || [], txns || [], budgets || []);
+  }
+
+  const empty = (hint) => `<p class="small">No data yet. ${hint}</p>`;
+
+  // ── P&L: month's cashbook lines grouped by category ─────
+  function renderPL(txns) {
+    const monthTxns = txns.filter((t) => t.date >= monthStart && t.date <= monthEnd);
+    const income = {}, expenses = {};
+    monthTxns.forEach((t) => {
+      const cat = t.category || 'Uncategorised';
+      const amt = Number(t.amount);
+      if (amt >= 0) income[cat] = (income[cat] || 0) + amt;
+      else expenses[cat] = (expenses[cat] || 0) + Math.abs(amt);
+    });
+
+    const totalIn  = Object.values(income).reduce((s, v) => s + v, 0);
+    const totalOut = Object.values(expenses).reduce((s, v) => s + v, 0);
+    const net = totalIn - totalOut;
+
+    if (monthTxns.length === 0) {
+      document.getElementById('plContent').innerHTML = empty('Transactions recorded in the app will appear here.');
+      return;
+    }
+
+    let html = '';
+    Object.entries(income).sort((a, b) => b[1] - a[1]).forEach(([name, v]) => {
+      html += `<div class="row"><span class="name">${name}</span><span class="val pos">+${fmtMoney(v)}</span></div>`;
+    });
+    Object.entries(expenses).sort((a, b) => b[1] - a[1]).forEach(([name, v]) => {
+      html += `<div class="row"><span class="name">${name}</span><span class="val neg">−${fmtMoney(v)}</span></div>`;
+    });
+    html += `<div class="row total"><span class="name">Net ${net >= 0 ? 'surplus' : 'deficit'}</span>
+             <span class="val ${net >= 0 ? 'pos' : 'neg'}">${net < 0 ? '−' : ''}${fmtMoney(net)}</span></div>`;
+    document.getElementById('plContent').innerHTML = html;
+  }
+
+  // ── Balance Sheet: running balance per asset/liability ──
+  function renderBS(accounts, txns) {
+    const sums = {};
+    txns.forEach((t) => { sums[t.account_id] = (sums[t.account_id] || 0) + Number(t.amount); });
+
+    const assets      = accounts.filter((a) => a.account_type === 'asset');
+    const liabilities = accounts.filter((a) => a.account_type === 'liability');
+
+    if (assets.length === 0 && liabilities.length === 0) {
+      document.getElementById('bsContent').innerHTML = empty('Add bank and liability accounts in the app to build your balance sheet.');
+      return;
+    }
+
+    const totalAssets = assets.reduce((s, a) => s + (sums[a.id] || 0), 0);
+    const totalLiab   = liabilities.reduce((s, a) => s + Math.abs(sums[a.id] || 0), 0);
+    const net = totalAssets - totalLiab;
+
+    let html = '<div class="section-label" style="margin-top:12px;">Assets</div>';
+    assets.forEach((a) => {
+      html += `<div class="row"><span class="name">${a.name}</span><span class="val">${fmtMoney(sums[a.id] || 0)}</span></div>`;
+    });
+    html += `<div class="row total"><span class="name">Total assets</span><span class="val pos">${fmtMoney(totalAssets)}</span></div>`;
+
+    if (liabilities.length > 0) {
+      html += '<div class="section-label" style="margin-top:20px;">Liabilities</div>';
+      liabilities.forEach((a) => {
+        html += `<div class="row"><span class="name">${a.name}</span><span class="val">${fmtMoney(Math.abs(sums[a.id] || 0))}</span></div>`;
+      });
+      html += `<div class="row total"><span class="name">Total liabilities</span><span class="val neg">${fmtMoney(totalLiab)}</span></div>`;
+    }
+
+    html += `<div class="row total" style="margin-top:16px;"><span class="name">Net position</span>
+             <span class="val ${net >= 0 ? 'pos' : 'neg'}">${net < 0 ? '−' : ''}${fmtMoney(net)}</span></div>`;
+    document.getElementById('bsContent').innerHTML = html;
+  }
+
+  // ── Budget: monthly amount vs this month's spend ────────
+  function renderBudget(accounts, txns, budgets) {
+    if (budgets.length === 0) {
+      document.getElementById('budgetContent').innerHTML = empty('Budgets set in the app will appear here.');
+      return;
+    }
+    const accById = {};
+    accounts.forEach((a) => { accById[a.id] = a; });
+
+    const monthTxns = txns.filter((t) => t.date >= monthStart && t.date <= monthEnd && Number(t.amount) < 0);
+    const spendByCategory = {};
+    monthTxns.forEach((t) => {
+      const cat = t.category || 'Uncategorised';
+      spendByCategory[cat] = (spendByCategory[cat] || 0) + Math.abs(Number(t.amount));
+    });
+
+    let totalBudget = 0, totalSpend = 0, html = '';
+    budgets.forEach((b) => {
+      const acc = accById[b.account_id];
+      const name = acc ? acc.name : 'Unknown category';
+      const budget = Number(b.monthly_amount);
+      const spent  = spendByCategory[name] || 0;
+      const pct = budget > 0 ? Math.round((spent / budget) * 100) : 0;
+      totalBudget += budget;
+      totalSpend  += spent;
+      html += `
+        <div class="budget-row">
+          <div class="budget-top">
+            <span class="name" style="color: var(--text-secondary);">${name}</span>
+            <span class="val ${spent > budget ? 'neg' : ''}">${fmtMoney(spent)} / ${fmtMoney(budget)}</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill${pct > 100 ? ' over' : ''}" style="width:${Math.min(100, pct)}%"></div></div>
+        </div>`;
+    });
+    html += `<div class="row total"><span class="name">Total</span>
+             <span class="val ${totalSpend > totalBudget ? 'neg' : ''}">${fmtMoney(totalSpend)} / ${fmtMoney(totalBudget)}</span></div>`;
+    document.getElementById('budgetContent').innerHTML = html;
+  }
+</script>
+</body>
+</html>

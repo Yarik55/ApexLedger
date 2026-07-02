@@ -27,62 +27,104 @@
   <div class="container" style="max-width: 480px;">
     <div class="fade-up" style="padding-top: 24px;">
       <div class="section-label" style="margin-bottom: 8px;">Client portal</div>
-      <h2 style="margin-bottom: 4px;">Sign in</h2>
-      <p class="small" style="margin-bottom: 4px;">Authentication will be connected next.</p>
+      <h2 id="formTitle" style="margin-bottom: 4px;">Sign in</h2>
+      <p class="small" style="margin-bottom: 4px;">Access your dashboards, documents and messages.</p>
     </div>
 
     <section class="card fade-up-2" style="margin-top: 24px;">
       <div id="msg" class="notice" style="display:none; margin-bottom: 16px;"></div>
       <form id="loginForm" novalidate style="max-width: 100%;">
+        <div id="nameField" style="display:none;">
+          <label for="fullName">Full name</label>
+          <input id="fullName" type="text" name="fullName" placeholder="e.g. Emma Chen" autocomplete="name">
+        </div>
         <div>
           <label for="email">Email address</label>
-          <input id="email" type="email" name="email" placeholder="you@example.com" required>
+          <input id="email" type="email" name="email" placeholder="you@example.com" required autocomplete="email">
         </div>
         <div>
           <label for="password">Password</label>
-          <input id="password" type="password" name="password" placeholder="Minimum 8 characters" required minlength="8">
+          <input id="password" type="password" name="password" placeholder="Minimum 8 characters" required minlength="8" autocomplete="current-password">
         </div>
         <div>
-          <button type="submit">Sign in →</button>
+          <button type="submit" id="submitBtn">Sign in →</button>
         </div>
         <p class="small" style="text-align: center; margin-top: 4px;">
-          Forgot password — coming soon. &nbsp;·&nbsp;
-          <a href="contact.html" style="color: var(--gold); text-decoration: none;">Need access?</a>
+          <a href="#" id="modeToggle" style="color: var(--blue-bright); text-decoration: none;">New client? Create an account</a>
+          &nbsp;·&nbsp;
+          <a href="contact.html" style="color: var(--text-secondary); text-decoration: none;">Need help?</a>
         </p>
       </form>
     </section>
-
-    <p class="small fade-up-3" style="text-align: center; margin-top: 20px;">
-      Don't have an account? <a href="contact.html" style="color: var(--gold-light); text-decoration: none;">Contact us to get set up.</a>
-    </p>
   </div>
 </main>
 
 <footer>
   <div class="container footer-inner">
     <div class="footer-brand">Apex<span>Ledger</span></div>
-    <div class="footer-brand">Apex<span>Ledger</span></div><div class="footer-copy">© 2026 ApexLedger</div>
+    <div class="footer-copy">© 2026 ApexLedger</div>
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
 <script>
-  const form = document.getElementById("loginForm");
-  const msg  = document.getElementById("msg");
+  const form   = document.getElementById('loginForm');
+  const msg    = document.getElementById('msg');
+  const toggle = document.getElementById('modeToggle');
+  let mode = 'signin';
 
-  function show(text, type = ""){
-    msg.style.display = "block";
+  function show(text, type = '') {
+    msg.style.display = 'block';
     msg.textContent   = text;
-    msg.className     = "notice" + (type ? " " + type : "");
+    msg.className     = 'notice' + (type ? ' ' + type : '');
   }
 
-  form.addEventListener("submit", (e) => {
+  toggle.addEventListener('click', (e) => {
     e.preventDefault();
-    const email = document.getElementById("email").value.trim();
-    const pw    = document.getElementById("password").value;
-    if (!email.includes("@")) return show("Please enter a valid email address.", "error");
-    if (pw.length < 8)        return show("Password must be at least 8 characters.", "error");
-    show("Login submitted (placeholder) — authentication coming soon.", "success");
-    form.reset();
+    mode = mode === 'signin' ? 'signup' : 'signin';
+    document.getElementById('formTitle').textContent = mode === 'signin' ? 'Sign in' : 'Create your account';
+    document.getElementById('nameField').style.display = mode === 'signin' ? 'none' : 'block';
+    document.getElementById('submitBtn').textContent = mode === 'signin' ? 'Sign in →' : 'Create account →';
+    toggle.textContent = mode === 'signin' ? 'New client? Create an account' : 'Already registered? Sign in';
+    msg.style.display = 'none';
+  });
+
+  // Already signed in? Straight to the dashboard.
+  sb.auth.getSession().then(({ data }) => {
+    if (data.session) window.location.href = 'dashboard.html';
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim().toLowerCase();
+    const pw    = document.getElementById('password').value;
+    if (!email.includes('@')) return show('Please enter a valid email address.', 'error');
+    if (pw.length < 8)        return show('Password must be at least 8 characters.', 'error');
+
+    document.getElementById('submitBtn').disabled = true;
+    try {
+      if (mode === 'signup') {
+        const fullName = document.getElementById('fullName').value.trim();
+        const { data, error } = await sb.auth.signUp({
+          email, password: pw,
+          options: { data: { full_name: fullName } },
+        });
+        if (error) throw error;
+        if (!data.session) {
+          show('Account created — check your email for the confirmation link, then sign in.', 'success');
+          document.getElementById('submitBtn').disabled = false;
+          return;
+        }
+      } else {
+        const { error } = await sb.auth.signInWithPassword({ email, password: pw });
+        if (error) throw error;
+      }
+      window.location.href = 'dashboard.html';
+    } catch (err) {
+      show(err.message || 'Something went wrong. Please try again.', 'error');
+      document.getElementById('submitBtn').disabled = false;
+    }
   });
 </script>
 </body>
