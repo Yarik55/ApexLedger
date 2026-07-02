@@ -148,11 +148,27 @@
     const { data: { session } } = await sb.auth.getSession();
     if (!session) { window.location.href = 'login.html'; return; }
 
-    const { data: profile } = await sb
+    let { data: profile } = await sb
       .from('profiles')
       .select('role, full_name')
       .eq('id', session.user.id)
       .maybeSingle();
+
+    // First visit from a site signup: create the profiles row so the
+    // welcome shows a name instead of a raw email address.
+    if (!profile) {
+      const { data: created } = await sb
+        .from('profiles')
+        .insert({
+          id: session.user.id,
+          email: session.user.email,
+          full_name: session.user.user_metadata?.full_name || null,
+          role: 'client',
+        })
+        .select('role, full_name')
+        .single();
+      profile = created;
+    }
 
     const firstName = (profile?.full_name || session.user.email || '').split(' ')[0];
     document.getElementById('welcome').textContent = `Welcome, ${firstName}`;
@@ -166,9 +182,16 @@
       .is('deleted_at', null)
       .order('entity_name');
 
-    if (error) { showMsg(error.message, 'error'); return; }
+    const clearPanels = (text) => {
+      ['plContent', 'bsContent', 'budgetContent'].forEach((id) => {
+        document.getElementById(id).innerHTML = `<p class="small">${text}</p>`;
+      });
+    };
+
+    if (error) { showMsg(error.message, 'error'); clearPanels('Unavailable.'); return; }
     if (!clients || clients.length === 0) {
       showMsg('No client engagement is linked to this login yet. Ask your practitioner to connect your account.', 'error');
+      clearPanels('Nothing to show until your account is connected.');
       return;
     }
 
