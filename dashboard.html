@@ -650,6 +650,12 @@ function renderAccount() {
       <label for="accEmail">Email</label>
       <input id="accEmail" value="${esc(S.profile?.email || '')}" disabled>
       <p style="font-size:12px;color:var(--muted);margin:-8px 0 16px">Email changes go through your practitioner for identity verification.</p>
+      <label for="accTfn">Tax File Number</label>
+      <input id="accTfn" placeholder="Loading…" autocomplete="off" inputmode="numeric">
+      <p style="font-size:12px;color:var(--muted);margin:-8px 0 16px">
+        Stored encrypted (Vault) — only your practitioner can ever read it in full.
+        Enter 9 digits to set or replace it.
+      </p>
       <button class="p-btn primary" id="accSave">Save changes</button>
       <span id="accMsg" style="margin-left:10px;font-size:13px;color:var(--green)"></span>
     </div>
@@ -662,12 +668,27 @@ function renderAccount() {
       </div>
       ${isStaff() ? '' : '<p style="font-size:13px;color:var(--text-2);margin:10px 0 0">Want tax returns or BAS handled too? Send a message from the Messages tab to upgrade.</p>'}
     </div>`;
+  // TFN: show the masked value; typing 9 digits replaces it via the
+  // encrypt-in-database RPC (never stored or sent in plain text at rest).
+  sb.rpc('get_client_tfn_masked', { p_client_id: S.client.id }).then(({ data, error }) => {
+    el('accTfn').placeholder = error ? 'Unavailable' : (data || 'Not set — enter 9 digits');
+  });
+
   el('accSave').onclick = async () => {
     const full_name = el('accName').value.trim();
     const phone = el('accPhone').value.trim() || null;
     if (!full_name) { showError('Please enter your name.'); return; }
     const { error } = await sb.from('profiles').update({ full_name, phone }).eq('id', S.userId);
     if (error) { showError(error.message); return; }
+
+    const tfnRaw = el('accTfn').value.replace(/\D/g, '');
+    if (tfnRaw.length > 0) {
+      const { error: tfnErr } = await sb.rpc('set_client_tfn', { p_client_id: S.client.id, p_tfn: tfnRaw });
+      if (tfnErr) { showError(tfnErr.message); return; }
+      el('accTfn').value = '';
+      el('accTfn').placeholder = '••• ••• ' + tfnRaw.slice(-3);
+    }
+
     S.profile.full_name = full_name; S.profile.phone = phone;
     el('userChipName').textContent = full_name;
     el('accMsg').textContent = '✓ Saved';
