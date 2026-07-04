@@ -483,16 +483,35 @@ function renderServices() {
       </div>`).join('')}`;
 }
 
-// ── Financials (P&L / Balance Sheet / Budget) ──────────────────────────────
+// ── Financials (P&L for a period / Balance Sheet as at a date / Budget) ────
 function renderFinancials() {
   const now = new Date();
-  const mStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const mStart = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-01`;
   const mEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+  const todayIso = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
   const label = now.toLocaleString('en-AU', { month: 'long', year: 'numeric' });
+  const fyStartYear = now.getMonth() + 1 >= 7 ? now.getFullYear() : now.getFullYear() - 1;
 
+  // Defaults on first open: P&L = current month, Balance Sheet = today.
+  if (!S.finFrom) { S.finFrom = mStart; S.finTo = mEnd; S.finAsAt = todayIso; }
+  const au = (s) => (s ? s.split('-').reverse().join('/') : '');
+
+  let controls = '';
   let body = '';
   if (S.finTab === 'pl') {
-    const monthTxns = S.txns.filter((t) => t.date >= mStart && t.date <= mEnd);
+    controls = `
+      <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom:16px;">
+        <label style="font-size:12px; color:var(--text-2); font-weight:700;">FROM<br>
+          <input type="date" id="finFrom" value="${S.finFrom}" style="margin-top:4px; background:var(--card-raised); color:var(--text); border:1px solid var(--border-strong); border-radius:8px; padding:7px 10px; font-family:inherit;"></label>
+        <label style="font-size:12px; color:var(--text-2); font-weight:700;">TO<br>
+          <input type="date" id="finTo" value="${S.finTo}" style="margin-top:4px; background:var(--card-raised); color:var(--text); border:1px solid var(--border-strong); border-radius:8px; padding:7px 10px; font-family:inherit;"></label>
+        <button class="p-subtab" id="finThisMonth">This month</button>
+        <button class="p-subtab" id="finThisFY">This FY</button>
+      </div>`;
+    const monthTxns = S.finFrom <= S.finTo
+      ? S.txns.filter((t) => t.date >= S.finFrom && t.date <= S.finTo)
+      : [];
     const income = {}, expenses = {};
     monthTxns.forEach((t) => {
       const cat = t.category || 'Uncategorised', amt = Number(t.amount);
@@ -500,13 +519,25 @@ function renderFinancials() {
     });
     const tin = Object.values(income).reduce((s, v) => s + v, 0);
     const tout = Object.values(expenses).reduce((s, v) => s + v, 0);
-    body = monthTxns.length === 0 ? '<div class="p-empty">No transactions this month.</div>' : `
+    body = monthTxns.length === 0
+      ? `<div class="p-empty">${S.finFrom <= S.finTo ? 'No transactions in this period.' : 'The From date must be on or before the To date.'}</div>` : `
       ${Object.entries(income).sort((a, b) => b[1] - a[1]).map(([n, v]) => `<div class="p-fin-row"><span class="name">${esc(n)}</span><span class="val pos">+${fmtMoney(v)}</span></div>`).join('')}
       ${Object.entries(expenses).sort((a, b) => b[1] - a[1]).map(([n, v]) => `<div class="p-fin-row"><span class="name">${esc(n)}</span><span class="val neg">−${fmtMoney(v)}</span></div>`).join('')}
       <div class="p-fin-row total"><span class="name">Net ${tin - tout >= 0 ? 'surplus' : 'deficit'}</span><span class="val ${tin - tout >= 0 ? 'pos' : 'neg'}">${tin - tout < 0 ? '−' : ''}${fmtMoney(tin - tout)}</span></div>`;
   } else if (S.finTab === 'bs') {
+    controls = `
+      <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; margin-bottom:16px;">
+        <label style="font-size:12px; color:var(--text-2); font-weight:700;">AS AT<br>
+          <input type="date" id="finAsAt" value="${S.finAsAt}" style="margin-top:4px; background:var(--card-raised); color:var(--text); border:1px solid var(--border-strong); border-radius:8px; padding:7px 10px; font-family:inherit;"></label>
+        <button class="p-subtab" id="finToday">Today</button>
+        <button class="p-subtab" id="finLastFy">Last FY end (30/06/${fyStartYear})</button>
+      </div>`;
+    // Snapshot: only transactions dated on or before the as-at date count.
     const sums = {};
-    S.txns.forEach((t) => { sums[t.account_id] = (sums[t.account_id] || 0) + Number(t.amount); });
+    S.txns.forEach((t) => {
+      if (t.date > S.finAsAt) return;
+      sums[t.account_id] = (sums[t.account_id] || 0) + Number(t.amount);
+    });
     const assets = S.accounts.filter((a) => a.account_type === 'asset');
     const liab = S.accounts.filter((a) => a.account_type === 'liability');
     const ta = assets.reduce((s, a) => s + (sums[a.id] || 0), 0);
@@ -535,14 +566,30 @@ function renderFinancials() {
       }).join('');
   }
 
+  const heading =
+    S.finTab === 'pl' ? `Period ${au(S.finFrom)} – ${au(S.finTo)}` :
+    S.finTab === 'bs' ? `As at ${au(S.finAsAt)}` : label;
+
   el('tabBody').innerHTML = `
-    <h2>Financials <span style="font-size:13px;font-weight:600;color:var(--text-2)">· ${label}</span></h2>
+    <h2>Financials <span style="font-size:13px;font-weight:600;color:var(--text-2)">· ${heading}</span></h2>
     <div class="p-subtabs">
       ${[['pl', 'Profit & Loss'], ['bs', 'Balance Sheet'], ['budget', 'Budget']].map(([id, l]) =>
         `<button class="p-subtab ${S.finTab === id ? 'active' : ''}" data-fin="${id}">${l}</button>`).join('')}
     </div>
+    ${controls}
     ${body}`;
   document.querySelectorAll('[data-fin]').forEach((btn) => { btn.onclick = () => { S.finTab = btn.dataset.fin; renderFinancials(); }; });
+
+  // Date controls re-render on change; presets jump to common AU periods.
+  const bind = (id, fn) => { const n = el(id); if (n) n.onchange = fn; };
+  bind('finFrom', () => { S.finFrom = el('finFrom').value; renderFinancials(); });
+  bind('finTo',   () => { S.finTo = el('finTo').value; renderFinancials(); });
+  bind('finAsAt', () => { S.finAsAt = el('finAsAt').value; renderFinancials(); });
+  const click = (id, fn) => { const n = el(id); if (n) n.onclick = fn; };
+  click('finThisMonth', () => { S.finFrom = mStart; S.finTo = mEnd; renderFinancials(); });
+  click('finThisFY',    () => { S.finFrom = `${fyStartYear}-07-01`; S.finTo = todayIso; renderFinancials(); });
+  click('finToday',     () => { S.finAsAt = todayIso; renderFinancials(); });
+  click('finLastFy',    () => { S.finAsAt = `${fyStartYear}-06-30`; renderFinancials(); });
 }
 
 // ── Calendar ────────────────────────────────────────────────────────────────
