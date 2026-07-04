@@ -137,7 +137,7 @@ const fmtBytes = (b) => !b ? '—' : b < 1048576 ? Math.round(b / 1024) + ' KB' 
 async function selectClient(client) {
   S.client = client;
   S.selectedFolder = null;
-  const [folders, docs, returns, bas, accounts, txns, budgets] = await Promise.all([
+  const [folders, docs, returns, bas, accounts, txns, budgets, services] = await Promise.all([
     sb.from('document_folders').select('id, name, parent_folder_id, folder_type, access_level').eq('client_id', client.id).order('name').then((r) => r.data || []),
     sb.from('documents').select('*').eq('client_id', client.id).is('deleted_at', null).order('created_at', { ascending: false }).then((r) => r.data || []),
     sb.from('tax_returns').select('*').eq('client_id', client.id).order('financial_year', { ascending: false }).then((r) => r.data || []),
@@ -145,8 +145,9 @@ async function selectClient(client) {
     sb.from('accounts').select('id, name, account_type, is_bank_account').eq('client_id', client.id).then((r) => r.data || []),
     sb.from('transactions').select('id, account_id, date, description, amount, category').eq('client_id', client.id).order('date', { ascending: false }).then((r) => r.data || []),
     sb.from('budgets').select('account_id, monthly_amount').eq('client_id', client.id).then((r) => r.data || []),
+    sb.from('client_services').select('*').eq('client_id', client.id).neq('status', 'declined').order('created_at', { ascending: false }).then((r) => r.data || []),
   ]);
-  Object.assign(S, { folders, docs, returns, bas, accounts, txns, budgets });
+  Object.assign(S, { folders, docs, returns, bas, accounts, txns, budgets, services });
   await openThread();
   renderAll();
 }
@@ -433,40 +434,90 @@ function renderForms() {
 // ── Engagement Letters ──────────────────────────────────────────────────────
 function renderLetters() {
   const contractFolders = S.folders.filter((f) => f.folder_type === 'contracts').map((f) => f.id);
-  const letters = S.docs.filter((d) => contractFolders.includes(d.folder_id));
+  const uploaded = S.docs.filter((d) => contractFolders.includes(d.folder_id));
+
   el('tabBody').innerHTML = `
     <h2>Engagement Letters</h2>
-    ${letters.length === 0
-      ? '<div class="p-empty">Your engagement letter and agreements appear here once uploaded by the practice.</div>'
-      : letters.map(docRow).join('')}`;
+    ${S.services.length === 0 && uploaded.length === 0
+      ? '<div class="p-empty">Engage a service under the Services tab and its engagement letter appears here to review and accept.</div>'
+      : ''}
+    ${S.services.map((s) => {
+      const accepted = !!s.accepted_at;
+      return `
+        <article class="blog-post" style="margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+            <h3 class="blog-title" style="margin:0">${esc(s.service_name)}</h3>
+            <span class="p-pill ${accepted ? 'green' : 'amber'}">${accepted ? '✓ Accepted ' + new Date(s.accepted_at).toLocaleDateString('en-AU') : '● Awaiting your acceptance'}</span>
+          </div>
+          <div class="blog-body" style="margin-top:12px;max-height:220px;overflow:auto;background:var(--card-raised);border-radius:8px;padding:14px;font-size:13px">${esc(s.engagement_letter || '')}</div>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            ${accepted ? '' : `<button class="p-btn primary" data-accept="${s.id}">Accept engagement</button>`}
+          </div>
+        </article>`;
+    }).join('')}
+    ${uploaded.length ? `<h2 style="margin-top:24px">Signed documents</h2>${uploaded.map(docRow).join('')}` : ''}`;
+
   bindDocActions();
+  document.querySelectorAll('[data-accept]').forEach((btn) => {
+    btn.onclick = async () => {
+      const svc = S.services.find((s) => s.id === btn.dataset.accept);
+      if (!svc || !confirm('By accepting you agree to the terms of this engagement letter. Continue?')) return;
+      const { error } = await sb.from('client_services').update({ status: 'active', accepted_at: new Date().toISOString() }).eq('id', svc.id);
+      if (error) { showError(error.message); return; }
+      svc.accepted_at = new Date().toISOString(); svc.status = 'active';
+      renderLetters();
+    };
+  });
 }
 
 // ── Services ────────────────────────────────────────────────────────────────
+// Engageable catalogue — core (mirrors the portal plans/work) + ad-hoc.
+// Prices are AU market placeholders; user sets real figures.
+const SERVICE_CATALOGUE = [
+  { key: 'individual_return', name: 'Individual Tax Return', price: 'From $165', scope: 'Preparation and lodgement of your individual income tax return, including income, deductions, offsets and review before lodgement.' },
+  { key: 'business_return',   name: 'Business / Sole Trader Tax Return', price: 'From $440', scope: 'Preparation and lodgement of your business schedule and income tax return, including reconciliation of income and deductible expenses.' },
+  { key: 'company_return',    name: 'Company Tax Return', price: 'From $990', scope: 'Preparation and lodgement of the company income tax return and financial statements.' },
+  { key: 'bas_lodgement',     name: 'BAS Preparation & Lodgement', price: 'From $150 / lodgement', scope: 'Preparation, review and lodgement of your Business Activity Statement each period as a registered BAS agent.' },
+  { key: 'bookkeeping',       name: 'Monthly Bookkeeping', price: 'From $349 / month', scope: 'Ongoing bank reconciliation, transaction coding with GST treatment, and monthly management reports.' },
+  { key: 'tax_advisory',      name: 'Tax Advisory', price: '$330 / hour', scope: 'Ad-hoc tax advice — structuring, CGT, deductions, ATO correspondence and planning, provided in writing where required.' },
+  { key: 'mgmt_accounting',   name: 'Management Accounting', price: 'From $450 / month', scope: 'Management reporting, budgeting, cashflow forecasting and KPI analysis to support business decisions.' },
+  { key: 'business_consulting', name: 'Business Consulting', price: '$250 / hour', scope: 'Advisory on business structure, systems, pricing and growth, scoped to your objectives.' },
+  { key: 'asic_secretary',    name: 'ASIC Company Secretarial', price: 'From $220 / year + ASIC fees', scope: 'Registered agent for ASIC — annual review, changes to officeholders/shares/address, and statutory register maintenance.' },
+];
+
+function engagementLetterText(svc) {
+  const today = new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+  const who = S.client.entity_name || 'the Client';
+  return `ENGAGEMENT LETTER — ${svc.name}\n`
+    + `Apex Ledger  ·  ${today}\n\n`
+    + `Dear ${who},\n\n`
+    + `Thank you for engaging Apex Ledger. This letter confirms the terms on which we will provide the following service.\n\n`
+    + `SERVICE\n${svc.name}\n\n`
+    + `SCOPE\n${svc.scope}\n\n`
+    + `FEES\n${svc.price}. Fees are estimates based on the expected scope; we will advise before undertaking work outside this scope.\n\n`
+    + `YOUR RESPONSIBILITIES\nYou agree to provide complete and accurate information on a timely basis and to review deliverables before lodgement or filing.\n\n`
+    + `OUR RESPONSIBILITIES\nWe will act with professional care and in accordance with applicable Australian professional and regulatory standards, and keep your information confidential and secure.\n\n`
+    + `By clicking "Accept engagement" in your portal, you agree to these terms. This engagement continues until completed or cancelled by either party in writing.`;
+}
+
 function renderServices() {
-  const cards = [];
-  cards.push({
-    title: TIER_LABELS[S.client.service_tier] || 'Plan not set',
-    sub: 'Your ApexLedger plan — app, dashboards and advisor chat',
-    type: 'Subscription', period: 'Ongoing', status: { label: 'Active', pill: 'green' }, pct: null,
-  });
+  const engagedKeys = new Set(S.services.map((s) => s.service_key));
+
+  // Current work (read-only status cards) from the portal.
+  const workCards = [];
+  workCards.push({ title: TIER_LABELS[S.client.service_tier] || 'Plan not set', sub: 'Your ApexLedger plan — app, dashboards and advisor chat', type: 'Subscription', period: 'Ongoing', status: { label: 'Active', pill: 'green' }, pct: null });
   S.returns.filter((r) => !['assessed'].includes(r.status)).forEach((r) => {
     const m = RETURN_STATUS[r.status] || { label: r.status, pill: 'slate', pct: 20 };
-    cards.push({
-      title: `FY${r.financial_year} Tax Return`, sub: 'Preparation and lodgement of your income tax return',
-      type: 'Tax', period: `FY${r.financial_year}`, status: m, pct: m.pct, updated: r.updated_at,
-    });
+    workCards.push({ title: `FY${r.financial_year} Tax Return`, sub: 'Preparation and lodgement of your income tax return', type: 'Tax', period: `FY${r.financial_year}`, status: m, pct: m.pct });
   });
   S.bas.filter((b) => !['lodged', 'amended'].includes(b.status)).forEach((b) => {
     const m = BAS_STATUS[b.status] || { label: b.status, pill: 'slate', pct: 20 };
-    cards.push({
-      title: `BAS — ${b.period_label || b.period_to}`, sub: 'Business activity statement preparation and lodgement',
-      type: 'BAS', period: b.period_label || '', status: m, pct: m.pct,
-    });
+    workCards.push({ title: `BAS — ${b.period_label || b.period_to}`, sub: 'Business activity statement preparation and lodgement', type: 'BAS', period: b.period_label || '', status: m, pct: m.pct });
   });
+
   el('tabBody').innerHTML = `
-    <h2>Services</h2>
-    ${cards.map((c) => `
+    <h2>Your services</h2>
+    ${workCards.map((c) => `
       <div class="p-service">
         <div class="p-service-head">
           <span><p class="p-service-title">💼 ${esc(c.title)}</p><p class="p-service-sub">${esc(c.sub)}</p></span>
@@ -477,10 +528,43 @@ function renderServices() {
           <span><p class="p-service-k">Period</p><p class="p-service-v">${esc(c.period)}</p></span>
           <span><p class="p-service-k">Assigned To</p><p class="p-service-v">Apex Ledger</p></span>
         </div>
-        ${c.pct != null ? `
-          <div class="p-progress-row"><span>Progress</span><span>${c.pct}%</span></div>
-          <div class="p-progress"><div style="width:${c.pct}%"></div></div>` : ''}
-      </div>`).join('')}`;
+        ${c.pct != null ? `<div class="p-progress-row"><span>Progress</span><span>${c.pct}%</span></div><div class="p-progress"><div style="width:${c.pct}%"></div></div>` : ''}
+      </div>`).join('')}
+
+    <h2 style="margin-top:28px">Add a service</h2>
+    <p class="p-service-sub" style="margin:-8px 0 16px">Pick a service to engage us — an engagement letter is generated instantly under the Engagement Letters tab for you to accept.</p>
+    ${SERVICE_CATALOGUE.map((svc) => {
+      const engaged = engagedKeys.has(svc.key);
+      return `
+        <div class="p-service">
+          <div class="p-service-head">
+            <span><p class="p-service-title">${esc(svc.name)}</p><p class="p-service-sub">${esc(svc.scope)}</p></span>
+            <span class="p-pill ${engaged ? 'green' : 'slate'}">${engaged ? '✓ Engaged' : esc(svc.price)}</span>
+          </div>
+          <div style="margin-top:12px">
+            ${engaged
+              ? `<button class="p-btn ghost" data-viewletter="${svc.key}">View engagement letter →</button>`
+              : `<button class="p-btn primary" data-engage="${svc.key}">Engage this service</button>`}
+          </div>
+        </div>`;
+    }).join('')}`;
+
+  document.querySelectorAll('[data-engage]').forEach((btn) => {
+    btn.onclick = async () => {
+      const svc = SERVICE_CATALOGUE.find((s) => s.key === btn.dataset.engage);
+      if (!svc || !confirm(`Engage Apex Ledger for "${svc.name}"? An engagement letter will be created for you to review and accept.`)) return;
+      const { data, error } = await sb.from('client_services').insert({
+        client_id: S.client.id, service_key: svc.key, service_name: svc.name,
+        price: svc.price, engagement_letter: engagementLetterText(svc),
+      }).select().single();
+      if (error) { showError(error.message); return; }
+      S.services.unshift(data);
+      switchTab('letters');
+    };
+  });
+  document.querySelectorAll('[data-viewletter]').forEach((btn) => {
+    btn.onclick = () => switchTab('letters');
+  });
 }
 
 // ── Financials (P&L for a period / Balance Sheet as at a date / Budget) ────
@@ -599,25 +683,71 @@ function basDue(periodTo, frequency) {
   if (end.getMonth() === 11) return new Date(end.getFullYear() + 1, 1, 28);
   return new Date(end.getFullYear(), end.getMonth() + 1, 28);
 }
+// Standard ATO lodgement/payment program (FY ending 30 June). Each entry is
+// month (1-based) + day, instantiated across this year and next, then filtered
+// to upcoming. `agent` = registered tax/BAS agent concessional date (only
+// shown to clients on a tax/BAS agent service); `biz` = business/GST-only.
+const CAL_TEMPLATE = [
+  // ── BAS — quarterly ──
+  { m: 10, d: 28, biz: true,  title: 'BAS Q1 (Jul–Sep) — general due', sub: 'Lodge & pay if you lodge your own quarterly BAS' },
+  { m: 11, d: 25, biz: true, agent: true, title: 'BAS Q1 (Jul–Sep) — tax/BAS agent due', sub: 'Concessional electronic lodgement date via your agent' },
+  { m: 2,  d: 28, biz: true,  title: 'BAS Q2 (Oct–Dec) — due (all lodgers)', sub: 'No agent concession this quarter — same date for everyone' },
+  { m: 4,  d: 28, biz: true,  title: 'BAS Q3 (Jan–Mar) — general due', sub: 'Lodge & pay if you lodge your own quarterly BAS' },
+  { m: 5,  d: 26, biz: true, agent: true, title: 'BAS Q3 (Jan–Mar) — tax/BAS agent due', sub: 'Concessional electronic lodgement date via your agent' },
+  { m: 7,  d: 28, biz: true,  title: 'BAS Q4 (Apr–Jun) — general due', sub: 'Lodge & pay if you lodge your own quarterly BAS' },
+  { m: 8,  d: 25, biz: true, agent: true, title: 'BAS Q4 (Apr–Jun) — tax/BAS agent due', sub: 'Concessional electronic lodgement date via your agent' },
+  // ── Superannuation guarantee — quarterly payment ──
+  { m: 10, d: 28, biz: true, title: 'Super guarantee Q1 (Jul–Sep) — pay by', sub: 'SG contributions must be received by the fund by this date' },
+  { m: 1,  d: 28, biz: true, title: 'Super guarantee Q2 (Oct–Dec) — pay by', sub: 'SG contributions must be received by the fund by this date' },
+  { m: 4,  d: 28, biz: true, title: 'Super guarantee Q3 (Jan–Mar) — pay by', sub: 'SG contributions must be received by the fund by this date' },
+  { m: 7,  d: 28, biz: true, title: 'Super guarantee Q4 (Apr–Jun) — pay by', sub: 'SG contributions must be received by the fund by this date' },
+  // ── Income tax return ──
+  { m: 10, d: 31, title: 'Income tax return — general (self-lodgers)', sub: 'Due 31 Oct if you lodge your own return' },
+  { m: 5,  d: 15, agent: true, title: 'Income tax return — tax agent program', sub: 'Most individuals & businesses with a tax agent (dates vary — confirm with us)' },
+  // ── FY end ──
+  { m: 6,  d: 30, title: 'Financial year end', sub: 'Last day of the Australian financial year — get records ready' },
+];
+
 function renderCalendar() {
   const now = new Date();
-  const fyEndYear = now.getMonth() + 1 >= 7 ? now.getFullYear() + 1 : now.getFullYear();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  // A client "has an agent" if they're on a tax or BAS agent service.
+  const hasAgent = S.client.service_tier === 'finance_tax' || S.client.service_tier === 'finance_tax_bas';
+  const isBusiness = S.client.service_tier === 'finance_tax_bas' || S.client.entity_type === 'sole_trader'
+    || S.client.entity_type === 'company' || S.client.entity_type === 'trust' || S.client.entity_type === 'partnership';
+
   const events = [];
-  S.bas.filter((b) => !['lodged', 'amended'].includes(b.status)).forEach((b) => {
-    events.push({ date: basDue(b.period_to, S.client.bas_frequency), title: `BAS due — ${b.period_label || b.period_to}`, sub: BAS_STATUS[b.status]?.label || b.status });
+  // Instantiate each template date across this year and next, keep upcoming ~14 months.
+  [now.getFullYear(), now.getFullYear() + 1].forEach((yr) => {
+    CAL_TEMPLATE.forEach((t) => {
+      if (t.agent && !hasAgent) return;      // agent dates only for agent clients
+      if (t.biz && !isBusiness) return;      // BAS/super/business dates only for business clients
+      const date = new Date(yr, t.m - 1, t.d);
+      if (date >= today) events.push({ date, title: t.title, sub: t.sub, agent: !!t.agent });
+    });
   });
-  if (S.client.service_tier !== 'finance_only') {
-    events.push({ date: new Date(fyEndYear - 1, 9, 31), title: 'Income tax return due (self-lodgers)', sub: 'Registered agent programs may extend this — confirm with your accountant' });
-  }
-  events.push({ date: new Date(fyEndYear, 5, 30), title: `FY${fyEndYear - 1}-${String(fyEndYear).slice(2)} year end`, sub: 'Last day of the financial year' });
-  const upcoming = events.filter((e) => e.date >= new Date(now.getFullYear(), now.getMonth(), now.getDate())).sort((a, b) => a.date - b.date);
+
+  // Plus this client's own scheduled BAS periods (from bas_lodgements).
+  S.bas.filter((b) => !['lodged', 'amended'].includes(b.status)).forEach((b) => {
+    const d = basDue(b.period_to, S.client.bas_frequency);
+    if (d >= today) events.push({ date: d, title: `Your BAS — ${b.period_label || b.period_to}`, sub: BAS_STATUS[b.status]?.label || b.status, own: true });
+  });
+
+  const upcoming = events.sort((a, b) => a.date - b.date).slice(0, 16);
 
   el('tabBody').innerHTML = `
-    <h2>Key Dates</h2>
+    <h2>Key dates</h2>
+    <p class="p-service-sub" style="margin:-8px 0 18px">
+      Australian lodgement &amp; payment dates for the year ahead${hasAgent ? ', including the concessional dates available through your registered agent' : ''}.
+      General guidance — always confirm against your ATO account.
+    </p>
     ${upcoming.length === 0 ? '<div class="p-empty">No upcoming dates.</div>' : upcoming.map((e) => `
       <div class="p-cal-row">
         <div class="p-cal-date">${e.date.getDate()}<span>${e.date.toLocaleString('en-AU', { month: 'short' })} ${e.date.getFullYear()}</span></div>
-        <div><p class="p-cal-title">${esc(e.title)}</p><p class="p-cal-sub">${esc(e.sub)}</p></div>
+        <div style="flex:1"><p class="p-cal-title">${esc(e.title)}
+          ${e.agent ? '<span style="display:inline-block;background:var(--blue-bg);color:var(--blue-bright);border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700;margin-left:6px">Agent date</span>' : ''}
+          ${e.own ? '<span class="event-badge" style="display:inline-block;background:var(--amber-bg);color:var(--amber);border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700;margin-left:6px">Your BAS</span>' : ''}
+        </p><p class="p-cal-sub">${esc(e.sub)}</p></div>
       </div>`).join('')}`;
 }
 
