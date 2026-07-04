@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Resources | ApexLedger</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Free ApexLedger resources — tax return checklists, Excel templates, webinars, and accounting, tax and bookkeeping news for Australian sole traders and small businesses.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .res-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+    .res-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+      padding: 26px 22px; text-align: center; display: flex; flex-direction: column; align-items: center;
+    }
+    .res-icon {
+      width: 74px; height: 74px; border-radius: 50%; background: var(--blue-dim);
+      color: var(--blue-bright); display: flex; align-items: center; justify-content: center;
+      font-size: 28px; margin-bottom: 16px;
+    }
+    .res-title { font-size: 15px; font-weight: 700; margin: 0 0 8px; color: var(--text); }
+    .res-desc { font-size: 13px; color: var(--text-secondary); margin: 0 0 18px; flex: 1; line-height: 1.55; }
+    .res-del { background: none; border: none; color: var(--error-text); font-size: 11px; cursor: pointer; margin-top: 10px; font-family: inherit; }
+    .video-wrap { position: relative; width: 100%; padding-top: 56.25%; border-radius: var(--radius); overflow: hidden; margin-bottom: 14px; background: #000; }
+    .video-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    .blog-post { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px 26px; margin-bottom: 18px; }
+    .blog-date { font-size: 12px; color: var(--text-muted); }
+    .blog-title { font-size: 18px; font-weight: 700; margin: 4px 0 10px; color: var(--text); }
+    .blog-body { font-size: 14px; color: var(--text-secondary); line-height: 1.7; white-space: pre-wrap; }
+    .event-badge { display: inline-block; background: var(--cyan-dim); color: var(--cyan); border-radius: 999px; padding: 2px 10px; font-size: 11px; font-weight: 700; margin-left: 8px; }
+    .staff-form { background: var(--card); border: 1px dashed var(--border-bright); border-radius: var(--radius-lg); padding: 20px; margin: 0 0 24px; }
+    .staff-form h4 { margin: 0 0 12px; font-size: 14px; color: var(--blue-bright); }
+    .staff-form input, .staff-form textarea {
+      width: 100%; background: var(--navy-700); border: 1px solid var(--border-mid); color: var(--text);
+      border-radius: var(--radius); padding: 9px 12px; font-family: inherit; font-size: 13px; margin-bottom: 10px;
+    }
+    .staff-form textarea { min-height: 110px; resize: vertical; }
+    .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 48px 0 20px; flex-wrap: wrap; }
+    .section-head h2 { margin: 0; }
+    .res-empty { color: var(--text-muted); font-size: 14px; padding: 22px 0; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="container header-inner">
+    <div class="brand">
+      <h1>Apex<span>Ledger</span></h1>
+      <p>Resources</p>
+    </div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="services.html">Plans</a>
+      <a href="resources.html">Resources</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="login.html" class="login-link">Login</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+
+    <div class="page-band fade-up">
+      <div class="section-label">Free resources</div>
+      <h2>Templates, webinars and news<br>for Australian small business.</h2>
+      <p style="color: var(--muted-light); font-size: 15px; max-width: 540px; margin: 0;">
+        Checklists and calculators to get organised, recorded webinars to learn
+        from, and plain-English updates on tax, bookkeeping and BAS.
+      </p>
+    </div>
+
+    <div id="msg" class="notice" style="display:none; margin-bottom: 16px;"></div>
+
+    <!-- TEMPLATES -->
+    <div class="section-head" id="templates">
+      <h2>Templates</h2>
+    </div>
+    <div id="tplForm" class="staff-form" style="display:none">
+      <h4>Add a template (staff)</h4>
+      <input id="tplTitle" placeholder="Title — e.g. Individual Tax Return Checklist">
+      <input id="tplDesc" placeholder="Short description shown on the card">
+      <input id="tplFile" type="file" accept=".xlsx,.xls,.csv,.pdf,.docx">
+      <button class="btn btn-primary" id="tplAdd">Upload template</button>
+    </div>
+    <div class="res-grid" id="tplGrid"><p class="res-empty">Loading…</p></div>
+
+    <!-- WEBINARS -->
+    <div class="section-head" id="webinars">
+      <h2>Webinars</h2>
+    </div>
+    <div id="webForm" class="staff-form" style="display:none">
+      <h4>Add a webinar (staff)</h4>
+      <input id="webTitle" placeholder="Title — e.g. EOFY prep for sole traders">
+      <input id="webDesc" placeholder="Short description">
+      <input id="webUrl" placeholder="YouTube link — e.g. https://youtu.be/xxxx">
+      <button class="btn btn-primary" id="webAdd">Add webinar</button>
+    </div>
+    <div class="res-grid" id="webGrid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));"><p class="res-empty">Loading…</p></div>
+
+    <!-- BLOG -->
+    <div class="section-head" id="blog">
+      <h2>News &amp; events</h2>
+    </div>
+    <div id="blogForm" class="staff-form" style="display:none">
+      <h4>Write a post (staff)</h4>
+      <input id="blogTitle" placeholder="Title">
+      <input id="blogEvent" type="date" title="Event date (leave empty for a normal post)">
+      <textarea id="blogBody" placeholder="Post body — plain text, blank lines make paragraphs"></textarea>
+      <button class="btn btn-primary" id="blogAdd">Publish</button>
+    </div>
+    <div id="blogList"><p class="res-empty">Loading…</p></div>
+
+    <div class="card card-accent fade-up" style="text-align:center; padding: 36px 30px; margin: 48px 0;">
+      <h2 style="margin-bottom: 10px;">Want this done for you instead?</h2>
+      <p class="small" style="max-width: 400px; margin: 0 auto 22px;">
+        Templates are a great start — a bookkeeper is better. See our packages
+        for sole traders and small companies.
+      </p>
+      <a href="services.html" class="btn btn-primary">See services →</a>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="container footer-inner">
+    <div class="footer-brand">Apex<span>Ledger</span></div>
+    <nav style="gap: 16px;">
+      <a href="services.html">Plans</a>
+      <a href="resources.html">Resources</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+    <div class="footer-copy">© 2026 ApexLedger</div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script>
+let RES = [];
+let STAFF = false;
+let USER_ID = null;
+
+const el = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const show = (t, type = '') => { const m = el('msg'); m.style.display = 'block'; m.textContent = t; m.className = 'notice' + (type ? ' ' + type : ''); };
+
+// Anonymous visitors read published rows; staff logins also get add/remove.
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    USER_ID = session.user.id;
+    const { data: p } = await sb.from('profiles').select('role').eq('id', USER_ID).maybeSingle();
+    STAFF = !!p && (p.role === 'practitioner' || p.role === 'admin');
+    if (STAFF) ['tplForm', 'webForm', 'blogForm'].forEach((id) => { el(id).style.display = 'block'; });
+  }
+  await load();
+})();
+
+async function load() {
+  const { data, error } = await sb.from('resources').select('*').eq('published', true).order('created_at', { ascending: false });
+  if (error) {
+    show(error.message.includes('resources') ? 'Resources are being set up — check back soon.' : error.message);
+    ['tplGrid', 'webGrid', 'blogList'].forEach((id) => { el(id).innerHTML = '<p class="res-empty">Nothing here yet.</p>'; });
+    return;
+  }
+  RES = data || [];
+  renderTemplates(); renderWebinars(); renderBlog();
+}
+
+const delBtn = (id) => STAFF ? `<button class="res-del" data-del="${id}">Remove</button>` : '';
+function bindDeletes() {
+  document.querySelectorAll('[data-del]').forEach((b) => {
+    b.onclick = async () => {
+      if (!confirm('Remove this item from the site?')) return;
+      await sb.from('resources').update({ published: false }).eq('id', b.dataset.del);
+      RES = RES.filter((r) => r.id !== b.dataset.del);
+      renderTemplates(); renderWebinars(); renderBlog();
+    };
+  });
+}
+
+// ── Templates ──────────────────────────────────────────────
+function renderTemplates() {
+  const items = RES.filter((r) => r.kind === 'template');
+  el('tplGrid').innerHTML = items.length === 0
+    ? '<p class="res-empty">Templates coming soon.</p>'
+    : items.map((r) => `
+        <div class="res-card fade-up">
+          <div class="res-icon">⬇</div>
+          <p class="res-title">${esc(r.title)}</p>
+          <p class="res-desc">${esc(r.description || '')}</p>
+          <button class="btn btn-ghost" data-get="${r.id}">Download</button>
+          ${delBtn(r.id)}
+        </div>`).join('');
+  document.querySelectorAll('[data-get]').forEach((b) => {
+    b.onclick = () => {
+      const r = RES.find((x) => x.id === b.dataset.get);
+      if (!r?.file_path) return;
+      const { data } = sb.storage.from('practice-assets').getPublicUrl(r.file_path);
+      window.open(data.publicUrl, '_blank');
+    };
+  });
+  bindDeletes();
+}
+
+el('tplAdd')?.addEventListener('click', async () => {
+  const title = el('tplTitle').value.trim();
+  const file = el('tplFile').files[0];
+  if (!title || !file) { show('Template needs a title and a file.', 'error'); return; }
+  const path = `templates/${Date.now()}_${file.name.replace(/[^\w.\-() ]+/g, '_')}`;
+  const { error: upErr } = await sb.storage.from('practice-assets').upload(path, file);
+  if (upErr) { show(upErr.message, 'error'); return; }
+  const { error } = await sb.from('resources').insert({ kind: 'template', title, description: el('tplDesc').value.trim() || null, file_path: path });
+  if (error) { show(error.message, 'error'); return; }
+  el('tplTitle').value = ''; el('tplDesc').value = ''; el('tplFile').value = '';
+  show('Template published.', 'success'); load();
+});
+
+// ── Webinars ───────────────────────────────────────────────
+function youtubeId(url) {
+  const m = String(url || '').match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/)([\w-]{11})/);
+  return m ? m[1] : null;
+}
+function renderWebinars() {
+  const items = RES.filter((r) => r.kind === 'webinar');
+  el('webGrid').innerHTML = items.length === 0
+    ? '<p class="res-empty">Webinars coming soon — recordings will appear here.</p>'
+    : items.map((r) => {
+        const id = youtubeId(r.url);
+        return `
+          <div class="res-card fade-up" style="text-align:left; align-items:stretch;">
+            ${id
+              ? `<div class="video-wrap"><iframe src="https://www.youtube-nocookie.com/embed/${id}" title="${esc(r.title)}" allowfullscreen loading="lazy"></iframe></div>`
+              : `<a class="btn btn-ghost" href="${esc(r.url)}" target="_blank" rel="noopener" style="margin-bottom:14px;">Watch →</a>`}
+            <p class="res-title" style="text-align:left;">${esc(r.title)}</p>
+            <p class="res-desc" style="text-align:left;">${esc(r.description || '')}</p>
+            ${delBtn(r.id)}
+          </div>`;
+      }).join('');
+  bindDeletes();
+}
+
+el('webAdd')?.addEventListener('click', async () => {
+  const title = el('webTitle').value.trim();
+  const url = el('webUrl').value.trim();
+  if (!title || !url) { show('Webinar needs a title and a YouTube link.', 'error'); return; }
+  const { error } = await sb.from('resources').insert({ kind: 'webinar', title, description: el('webDesc').value.trim() || null, url });
+  if (error) { show(error.message, 'error'); return; }
+  el('webTitle').value = ''; el('webDesc').value = ''; el('webUrl').value = '';
+  show('Webinar published.', 'success'); load();
+});
+
+// ── Blog / events ──────────────────────────────────────────
+function renderBlog() {
+  const items = RES.filter((r) => r.kind === 'blog');
+  el('blogList').innerHTML = items.length === 0
+    ? '<p class="res-empty">Posts on tax, bookkeeping and BAS are coming — subscribe by contacting us.</p>'
+    : items.map((r) => {
+        const d = new Date(r.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+        const ev = r.event_date
+          ? `<span class="event-badge">Event · ${new Date(r.event_date + 'T00:00:00').toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}</span>` : '';
+        return `
+          <article class="blog-post fade-up">
+            <span class="blog-date">${d}</span>${ev}
+            <h3 class="blog-title">${esc(r.title)}</h3>
+            <div class="blog-body">${esc(r.description || '')}</div>
+            ${delBtn(r.id)}
+          </article>`;
+      }).join('');
+  bindDeletes();
+}
+
+el('blogAdd')?.addEventListener('click', async () => {
+  const title = el('blogTitle').value.trim();
+  const body = el('blogBody').value.trim();
+  if (!title || !body) { show('A post needs a title and a body.', 'error'); return; }
+  const { error } = await sb.from('resources').insert({
+    kind: 'blog', title, description: body, event_date: el('blogEvent').value || null,
+  });
+  if (error) { show(error.message, 'error'); return; }
+  el('blogTitle').value = ''; el('blogBody').value = ''; el('blogEvent').value = '';
+  show('Post published.', 'success'); load();
+});
+</script>
+</body>
+</html>
