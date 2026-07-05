@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tax Calculator | ApexLedger</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Free Australian income tax calculator for the 2025–26 financial year (ending 30 June 2026) — income tax, Medicare levy, LITO, HELP/HECS and take-home pay. Estimate only.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .calc-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+    @media (max-width: 780px) { .calc-wrap { grid-template-columns: 1fr; } }
+    .calc-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; }
+    .calc-field { margin-bottom: 16px; }
+    .calc-field label { display: block; font-size: 13px; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; }
+    .calc-field input[type=number], .calc-field select {
+      width: 100%; background: var(--navy-700); border: 1px solid var(--border-mid); color: var(--text);
+      border-radius: var(--radius); padding: 11px 13px; font-family: inherit; font-size: 15px; outline: none;
+    }
+    .calc-field input:focus, .calc-field select:focus { border-color: var(--blue); }
+    .income-row { display: flex; gap: 10px; }
+    .income-row input { flex: 2; } .income-row select { flex: 1; }
+    .toggle { display: flex; align-items: center; gap: 10px; padding: 9px 0; font-size: 14px; color: var(--muted-light); cursor: pointer; }
+    .toggle input { width: 18px; height: 18px; accent-color: var(--blue); }
+    .res-line { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 15px; }
+    .res-line:last-of-type { border-bottom: none; }
+    .res-line .k { color: var(--text-secondary); }
+    .res-line .v { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .res-line.big { margin-top: 8px; padding-top: 16px; border-top: 2px solid var(--border-bright); }
+    .res-line.big .k { font-size: 16px; font-weight: 700; color: var(--text); }
+    .res-line.big .v { font-size: 22px; color: var(--blue-bright); }
+    .neg { color: #fca5a5; } .pos { color: var(--success); }
+    .period-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 18px; }
+    .period-cell { background: var(--navy-800); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; text-align: center; }
+    .period-cell .p-k { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
+    .period-cell .p-v { font-size: 16px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .prefill { background: var(--blue-dim); border: 1px solid var(--border-bright); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 16px; font-size: 13px; color: var(--muted-light); }
+    .prefill button { margin-top: 8px; }
+    .disclaimer { font-size: 12px; color: var(--text-muted); line-height: 1.7; margin-top: 20px; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="container header-inner">
+    <div class="brand">
+      <h1>Apex<span>Ledger</span></h1>
+      <p>Tax calculator</p>
+    </div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="services.html">Plans</a>
+      <a href="resources.html">Resources</a>
+      <a href="taxcalculator.html">Tax Calc</a>
+      <a href="about.html">About</a>
+      <a href="login.html" class="login-link">Login</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+
+    <div class="page-band fade-up">
+      <div class="section-label">Free tool · FY 2025–26 (ending 30 June 2026)</div>
+      <h2>Australian income tax calculator</h2>
+      <p style="color: var(--muted-light); font-size: 15px; max-width: 560px; margin: 0;">
+        Estimate your income tax, Medicare levy, offsets and take-home pay. Play with
+        the numbers, or — if you're an ApexLedger client — pull in the income you've
+        actually tracked this financial year.
+      </p>
+    </div>
+
+    <div class="calc-wrap fade-up-2">
+      <!-- INPUTS -->
+      <div class="calc-card">
+        <div id="prefill" class="prefill" style="display:none">
+          <strong>Signed in.</strong> Use the income you've tracked in ApexLedger so far this FY as your starting figure.
+          <div><button class="btn btn-ghost" id="prefillBtn">Use my tracked income →</button></div>
+        </div>
+
+        <div class="calc-field">
+          <label for="income">Your income</label>
+          <div class="income-row">
+            <input id="income" type="number" min="0" step="100" value="90000" inputmode="decimal">
+            <select id="freq">
+              <option value="1">per year</option>
+              <option value="12">per month</option>
+              <option value="26">per fortnight</option>
+              <option value="52">per week</option>
+            </select>
+          </div>
+        </div>
+
+        <label class="toggle"><input type="checkbox" id="inclSuper"> Income figure <strong>includes</strong> super</label>
+        <label class="toggle"><input type="checkbox" id="hasHelp"> I have a HELP / HECS study debt</label>
+        <label class="toggle"><input type="checkbox" id="medExempt"> Exempt from the Medicare levy</label>
+        <label class="toggle"><input type="checkbox" id="nonResident"> I'm a non-resident for tax purposes</label>
+
+        <p class="disclaimer" style="margin-top:16px">
+          Uses 2025–26 resident rates, 2% Medicare levy (with low-income shade-in),
+          the Low Income Tax Offset, and super guarantee of 12%. HELP repayment is
+          indicative. This is a general estimate only, not tax advice, and excludes
+          things like the Medicare levy surcharge, other offsets and non-standard
+          circumstances — talk to us for your actual position.
+        </p>
+      </div>
+
+      <!-- RESULTS -->
+      <div class="calc-card">
+        <div class="res-line"><span class="k">Gross salary</span><span class="v" id="rGross">—</span></div>
+        <div class="res-line"><span class="k">Superannuation (12%)</span><span class="v" id="rSuper">—</span></div>
+        <div class="res-line"><span class="k">Taxable income</span><span class="v" id="rTaxable">—</span></div>
+        <div class="res-line"><span class="k">Income tax</span><span class="v neg" id="rTax">—</span></div>
+        <div class="res-line"><span class="k">Less: LITO</span><span class="v pos" id="rLito">—</span></div>
+        <div class="res-line"><span class="k">Medicare levy</span><span class="v neg" id="rMed">—</span></div>
+        <div class="res-line" id="rHelpRow"><span class="k">HELP / HECS repayment</span><span class="v neg" id="rHelp">—</span></div>
+        <div class="res-line"><span class="k">Total tax &amp; levies</span><span class="v neg" id="rTotal">—</span></div>
+        <div class="res-line big"><span class="k">Take-home pay</span><span class="v" id="rNet">—</span></div>
+        <div class="res-line"><span class="k">Average tax rate</span><span class="v" id="rRate">—</span></div>
+
+        <div class="period-grid">
+          <div class="period-cell"><div class="p-k">Weekly</div><div class="p-v" id="pWeek">—</div></div>
+          <div class="period-cell"><div class="p-k">Fortnightly</div><div class="p-v" id="pFort">—</div></div>
+          <div class="period-cell"><div class="p-k">Monthly</div><div class="p-v" id="pMonth">—</div></div>
+          <div class="period-cell"><div class="p-k">Annually</div><div class="p-v" id="pYear">—</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-accent fade-up-3" style="text-align:center; padding: 36px 30px; margin: 40px 0;">
+      <h2 style="margin-bottom: 10px;">Want this from your real numbers, all year?</h2>
+      <p class="small" style="max-width: 420px; margin: 0 auto 22px;">
+        ApexLedger tracks your income as you earn it and keeps a live tax estimate in
+        your dashboard — no guessing at year end.
+      </p>
+      <a href="login.html" class="btn btn-primary">Open the portal →</a>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="container footer-inner">
+    <div class="footer-brand">Apex<span>Ledger</span></div>
+    <nav style="gap: 16px;">
+      <a href="services.html">Plans</a>
+      <a href="resources.html">Resources</a>
+      <a href="taxcalculator.html">Tax Calc</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+    <div class="footer-copy">© 2026 ApexLedger</div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script>
+// ── AU tax engine — FY 2025–26 (year ending 30 June 2026), resident ─────────
+// Kept as a single pure function so the mobile app can reuse it verbatim.
+function calcTax(opts) {
+  const ti = Math.max(0, opts.taxable || 0);
+  const resident = !opts.nonResident;
+
+  // Income tax on taxable income
+  let tax = 0;
+  if (resident) {
+    if (ti > 190000)      tax = 51638 + (ti - 190000) * 0.45;
+    else if (ti > 135000) tax = 31288 + (ti - 135000) * 0.37;
+    else if (ti > 45000)  tax = 4288  + (ti - 45000)  * 0.30;
+    else if (ti > 18200)  tax = (ti - 18200) * 0.16;
+  } else {
+    // Foreign resident: no tax-free threshold, no Medicare, no LITO
+    // Bases: 135k @30% = 40,500; +55k @37% = 60,850 at 190k
+    if (ti > 190000)      tax = 60850 + (ti - 190000) * 0.45;
+    else if (ti > 135000) tax = 40500 + (ti - 135000) * 0.37;
+    else                  tax = ti * 0.30;
+  }
+
+  // Low Income Tax Offset (residents only)
+  let lito = 0;
+  if (resident) {
+    if (ti <= 37500)      lito = 700;
+    else if (ti <= 45000) lito = 700 - (ti - 37500) * 0.05;
+    else if (ti <= 66667) lito = Math.max(0, 325 - (ti - 45000) * 0.015);
+  }
+  const taxAfterOffsets = Math.max(0, tax - lito);
+
+  // Medicare levy 2% with a single low-income shade-in (approx 2024-25 thresholds)
+  let medicare = 0;
+  if (resident && !opts.medExempt) {
+    const lower = 27222, upper = 34027; // full 2% above upper
+    if (ti > upper)      medicare = ti * 0.02;
+    else if (ti > lower) medicare = (ti - lower) * 0.10; // shade-in
+  }
+
+  // HELP/HECS repayment — indicative 2024-25 schedule. The rate for the band
+  // your repayment income falls into applies to the whole income.
+  let help = 0;
+  if (opts.hasHelp) {
+    const ri = ti; // simplification: repayment income ≈ taxable income here
+    const bands = [
+      [54435, 0.01], [62851, 0.02], [66621, 0.025], [70619, 0.03], [74856, 0.035],
+      [79347, 0.04], [84108, 0.045], [89155, 0.05], [94504, 0.055], [100175, 0.06],
+      [106186, 0.065], [112557, 0.07], [119310, 0.075], [126468, 0.08], [134057, 0.085],
+      [142101, 0.09], [150627, 0.095], [159664, 0.10],
+    ];
+    let rate = 0;
+    for (const [floor, r] of bands) { if (ri >= floor) rate = r; }
+    help = ri * rate;
+  }
+
+  const total = taxAfterOffsets + medicare + help;
+  return {
+    tax: Math.round(tax),
+    lito: Math.round(lito),
+    medicare: Math.round(medicare),
+    help: Math.round(help),
+    total: Math.round(total),
+    net: Math.round(ti - total),
+    avgRate: ti > 0 ? total / ti : 0,
+  };
+}
+
+const SUPER_RATE = 0.12; // 2025-26 super guarantee
+const el = (id) => document.getElementById(id);
+const money = (n) => '$' + Math.round(n).toLocaleString('en-AU');
+
+function recalc() {
+  const raw = parseFloat(el('income').value) || 0;
+  const annual = raw * (parseInt(el('freq').value, 10) || 1);
+  const inclSuper = el('inclSuper').checked;
+
+  // If the figure includes super, back super out to get the gross salary.
+  const gross = inclSuper ? annual / (1 + SUPER_RATE) : annual;
+  const superAmt = gross * SUPER_RATE;
+
+  const r = calcTax({
+    taxable: gross,
+    nonResident: el('nonResident').checked,
+    medExempt: el('medExempt').checked,
+    hasHelp: el('hasHelp').checked,
+  });
+
+  el('rGross').textContent = money(gross);
+  el('rSuper').textContent = money(superAmt);
+  el('rTaxable').textContent = money(gross);
+  el('rTax').textContent = '−' + money(r.tax);
+  el('rLito').textContent = r.lito > 0 ? '+' + money(r.lito) : '$0';
+  el('rMed').textContent = '−' + money(r.medicare);
+  el('rHelpRow').style.display = el('hasHelp').checked ? 'flex' : 'none';
+  el('rHelp').textContent = '−' + money(r.help);
+  el('rTotal').textContent = '−' + money(r.total);
+  el('rNet').textContent = money(r.net);
+  el('rRate').textContent = (r.avgRate * 100).toFixed(1) + '%';
+
+  el('pWeek').textContent = money(r.net / 52);
+  el('pFort').textContent = money(r.net / 26);
+  el('pMonth').textContent = money(r.net / 12);
+  el('pYear').textContent = money(r.net);
+}
+
+['income', 'freq', 'inclSuper', 'hasHelp', 'medExempt', 'nonResident'].forEach((id) => {
+  el(id).addEventListener('input', recalc);
+  el(id).addEventListener('change', recalc);
+});
+recalc();
+
+// ── Signed-in clients: prefill from actual tracked FY income ────────────────
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+  el('prefill').style.display = 'block';
+  el('prefillBtn').onclick = async () => {
+    // Current AU financial year (1 Jul – 30 Jun)
+    const now = new Date();
+    const y = now.getMonth() + 1 >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+    const fyStart = `${y}-07-01`, fyEnd = `${y + 1}-06-30`;
+
+    // RLS scopes this to the signed-in client's own transactions.
+    const { data: clients } = await sb.from('clients').select('id').is('deleted_at', null).limit(1);
+    if (!clients || !clients.length) { alert('No client engagement linked to this login.'); return; }
+    const { data: txns } = await sb.from('transactions')
+      .select('amount').eq('client_id', clients[0].id)
+      .gte('date', fyStart).lte('date', fyEnd).gt('amount', 0);
+    const income = (txns || []).reduce((s, t) => s + Number(t.amount), 0);
+    el('freq').value = '1';
+    el('inclSuper').checked = false;
+    el('income').value = Math.round(income);
+    recalc();
+    el('prefill').innerHTML = `<strong>Loaded your tracked income</strong> for FY ${y}–${String(y + 1).slice(2)}: ${money(income)}. Adjust anything above to explore scenarios.`;
+  };
+})();
+</script>
+</body>
+</html>
