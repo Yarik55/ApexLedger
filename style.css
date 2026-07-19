@@ -699,3 +699,98 @@ footer a:hover { color: var(--text); }
   .hero-actions { flex-direction: column; align-items: flex-start; }
   .page-band { padding: 36px 0 32px; }
 }
+
+/* ─── AMBIENT LEDGER RAIN (matrix.js) ─────────────────────────────────── */
+/* The canvas sits behind everything; all page chrome stacks above it.     */
+#matrix-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+}
+header, main, footer { position: relative; z-index: 1; }
+
+/* ─── BUTTON POLISH ───────────────────────────────────────────────────── */
+.btn {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease,
+              background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+/* Light sheen that sweeps across on hover */
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  left: -80%;
+  width: 60%;
+  background: linear-gradient(105deg, transparent, rgba(232, 237, 245, 0.14), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.45s ease;
+  pointer-events: none;
+}
+.btn:hover::after { left: 120%; }
+.btn:active { transform: translateY(0) scale(0.985); }
+.btn:focus-visible {
+  outline: 2px solid var(--blue-bright);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, #4b8ef8 0%, var(--blue) 55%, #2f6fe0 100%);
+  border-color: rgba(96, 165, 250, 0.55);
+}
+.btn-primary:hover {
+  background: linear-gradient(180deg, #5b99ff 0%, #2f6fe0 60%, #2563eb 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 26px rgba(59, 130, 246, 0.45),
+              0 0 0 1px rgba(96, 165, 250, 0.35) inset;
+}
+.btn-ghost:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.18);
+}
+
+/* ─── CARD & STAT HOVER GLOW ──────────────────────────────────────────── */
+.card, .stat, .pricing-card {
+  transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+.card:hover, .pricing-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-bright);
+  box-shadow: 0 14px 38px rgba(3, 8, 20, 0.55),
+              0 0 24px rgba(59, 130, 246, 0.10);
+}
+.stat:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-mid);
+  box-shadow: 0 8px 24px rgba(3, 8, 20, 0.45);
+}
+.stat .stat-number { transition: color 0.25s ease, text-shadow 0.25s ease; }
+.stat:hover .stat-number {
+  color: var(--blue-bright);
+  text-shadow: 0 0 18px rgba(96, 165, 250, 0.45);
+}
+
+/* Nav underline slide */
+nav a { position: relative; }
+nav a::after {
+  content: '';
+  position: absolute;
+  left: 12px; right: 100%;
+  bottom: 4px;
+  height: 1.5px;
+  background: var(--blue-bright);
+  transition: right 0.22s ease;
+}
+nav a:hover::after { right: 12px; }
+nav a.login-link::after { display: none; }
+
+/* Accessibility: no motion for those who ask for none */
+@media (prefers-reduced-motion: reduce) {
+  #matrix-bg { display: none; }
+  .btn, .card, .stat, .pricing-card, nav a::after { transition: none; }
+  .btn::after { display: none; }
+  .fade-up, .fade-up-2, .fade-up-3, .fade-up-4, .pricing-card { animation: none; }
+}
