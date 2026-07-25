@@ -50,8 +50,7 @@
       <a href="index.html">Home</a>
       <a href="services.html">Plans</a>
       <a href="resources.html">Resources</a>
-      <a href="taxcalculator.html">Tax Calc</a>
-      <a href="gstcalculator.html">GST Calc</a>
+      <a href="calculators.html">Calculators</a>
       <a href="about.html">About</a>
       <a href="contact.html">Contact</a>
       <a href="login.html" class="login-link">Login</a>
@@ -111,6 +110,59 @@
       <button class="btn btn-primary" id="blogAdd">Publish</button>
     </div>
     <div id="blogList"><p class="res-empty">Loading…</p></div>
+
+    <!-- KEY LODGEMENT DUE DATES -->
+    <div class="section-head" id="duedates">
+      <h2>Key ATO lodgement due dates</h2>
+    </div>
+    <p class="small" style="color: var(--muted-light); max-width: 620px; margin: 0 0 20px;">
+      The dates below are the standard program — a general guide only. Dates shift when they
+      fall on weekends/holidays, and your circumstances can change them. Lodging through a
+      <strong>registered agent</strong> generally unlocks the later dates in the second card —
+      but only if you're on their client list <strong>by 31 October</strong>. Your agent
+      confirms your exact dates; we keep the books ready so any deadline is easy.
+    </p>
+
+    <div class="grid two" style="margin-bottom: 40px;">
+      <section class="card">
+        <div class="section-label">Lodging yourself</div>
+        <h3 style="margin: 6px 0 14px; font-size: 17px;">Self-lodger due dates</h3>
+        <table style="width:100%; border-collapse: collapse; font-size: 13px;">
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 4px; color:var(--text-secondary);">Individual tax return</td><td style="padding:8px 4px; text-align:right; color:var(--text); font-weight:600;">31 October</td></tr>
+            <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 4px; color:var(--text-secondary);">Quarterly BAS — Q1 (Jul–Sep)</td><td style="padding:8px 4px; text-align:right; color:var(--text); font-weight:600;">28 October</td></tr>
+            <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 4px; color:var(--text-secondary);">Quarterly BAS — Q2 (Oct–Dec)</td><td style="padding:8px 4px; text-align:right; color:var(--text); font-weight:600;">28 February</td></tr>
+            <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 4px; color:var(--text-secondary);">Quarterly BAS — Q3 (Jan–Mar)</td><td style="padding:8px 4px; text-align:right; color:var(--text); font-weight:600;">28 April</td></tr>
+            <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 4px; color:var(--text-secondary);">Quarterly BAS — Q4 (Apr–Jun)</td><td style="padding:8px 4px; text-align:right; color:var(--text); font-weight:600;">28 July</td></tr>
+            <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 4px; color:var(--text-secondary);">Monthly BAS / IAS</td><td style="padding:8px 4px; text-align:right; color:var(--text); font-weight:600;">21st of next month</td></tr>
+            <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 4px; color:var(--text-secondary);">FBT return (year ends 31 Mar)</td><td style="padding:8px 4px; text-align:right; color:var(--text); font-weight:600;">21 May</td></tr>
+            <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 4px; color:var(--text-secondary);">TPAR (contractor payments)</td><td style="padding:8px 4px; text-align:right; color:var(--text); font-weight:600;">28 August</td></tr>
+            <tr><td style="padding:8px 4px; color:var(--text-secondary);">Super guarantee (quarterly)</td><td style="padding:8px 4px; text-align:right; color:var(--text); font-weight:600;">28 Oct · 28 Jan · 28 Apr · 28 Jul</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card card-accent">
+        <div class="section-label">Lodging through a registered agent</div>
+        <h3 style="margin: 6px 0 14px; font-size: 17px;">Agent lodgment program (typical concessions)</h3>
+        <table style="width:100%; border-collapse: collapse; font-size: 13px;">
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 4px; color:var(--text-secondary);">Individual return (most)</td><td style="padding:8px 4px; text-align:right; color:var(--text); font-weight:600;">up to 15 May</td></tr>
+            <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 4px; color:var(--text-secondary);">Individual — prior-year liability $20k+</td><td style="padding:8px 4px; text-align:right; color:var(--text); font-weight:600;">31 March</td></tr>
+            <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 4px; color:var(--text-secondary);">Companies &amp; trusts (small, non-taxable prior year)</td><td style="padding:8px 4px; text-align:right; color:var(--text); font-weight:600;">generally 28 Feb / 15 May</td></tr>
+            <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 4px; color:var(--text-secondary);">Quarterly BAS — Q1 (electronic)</td><td style="padding:8px 4px; text-align:right; color:var(--text); font-weight:600;">25 November</td></tr>
+            <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 4px; color:var(--text-secondary);">Quarterly BAS — Q2 (no extra time)</td><td style="padding:8px 4px; text-align:right; color:var(--text); font-weight:600;">28 February</td></tr>
+            <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 4px; color:var(--text-secondary);">Quarterly BAS — Q3 (electronic)</td><td style="padding:8px 4px; text-align:right; color:var(--text); font-weight:600;">26 May</td></tr>
+            <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 4px; color:var(--text-secondary);">Quarterly BAS — Q4 (electronic)</td><td style="padding:8px 4px; text-align:right; color:var(--text); font-weight:600;">25 August</td></tr>
+            <tr><td style="padding:8px 4px; color:var(--text-secondary);">FBT return (agent, electronic)</td><td style="padding:8px 4px; text-align:right; color:var(--text); font-weight:600;">25 June</td></tr>
+          </tbody>
+        </table>
+        <p class="small" style="margin-top: 12px; color: var(--text-muted);">
+          We're not a registered agent — these are the concessions <em>your</em> agent can
+          access. The ATO publishes the definitive program each year.
+        </p>
+      </section>
+    </div>
 
     <div class="card card-accent fade-up" style="text-align:center; padding: 36px 30px; margin: 48px 0;">
       <h2 style="margin-bottom: 10px;">Want this done for you instead?</h2>
