@@ -64,7 +64,7 @@ const TABS = [
   { id: 'calendar',   label: 'Calendar' },
   { id: 'messages',   label: 'Messages' },
 ];
-const TIER_LABELS = { finance_only: 'Finance tracking', finance_tax: 'Finance + Tax return', finance_tax_bas: 'Finance + Tax + BAS' };
+const TIER_LABELS = { finance_only: 'Bookkeeping', finance_tax: 'Bookkeeping + Budgeting', finance_tax_bas: 'Management Accounting' };
 const RETURN_STATUS = {
   not_started:   { label: 'Not started',   pill: 'slate', pct: 5 },
   in_progress:   { label: 'In Progress',   pill: 'amber', pct: 45 },
@@ -77,7 +77,7 @@ const BAS_STATUS = {
   draft:           { label: 'In preparation', pill: 'slate', pct: 25 },
   in_review:       { label: 'In review',      pill: 'slate', pct: 55 },
   client_review:   { label: 'Awaiting your approval', pill: 'amber', pct: 75 },
-  client_approved: { label: 'Approved — ready to lodge', pill: 'blue', pct: 90 },
+  client_approved: { label: 'Approved — ready for your agent', pill: 'blue', pct: 90 },
   lodged:          { label: 'Lodged',         pill: 'green', pct: 100 },
   amended:         { label: 'Amended',        pill: 'slate', pct: 100 },
 };
@@ -474,15 +474,11 @@ function renderLetters() {
 // Engageable catalogue — core (mirrors the portal plans/work) + ad-hoc.
 // Prices are AU market placeholders; user sets real figures.
 const SERVICE_CATALOGUE = [
-  { key: 'individual_return', name: 'Individual Tax Return', price: 'From $165', scope: 'Preparation and lodgement of your individual income tax return, including income, deductions, offsets and review before lodgement.' },
-  { key: 'business_return',   name: 'Business / Sole Trader Tax Return', price: 'From $440', scope: 'Preparation and lodgement of your business schedule and income tax return, including reconciliation of income and deductible expenses.' },
-  { key: 'company_return',    name: 'Company Tax Return', price: 'From $990', scope: 'Preparation and lodgement of the company income tax return and financial statements.' },
-  { key: 'bas_lodgement',     name: 'BAS Preparation & Lodgement', price: 'From $150 / lodgement', scope: 'Preparation, review and lodgement of your Business Activity Statement each period as a registered BAS agent.' },
-  { key: 'bookkeeping',       name: 'Monthly Bookkeeping', price: 'From $349 / month', scope: 'Ongoing bank reconciliation, transaction coding with GST treatment, and monthly management reports.' },
-  { key: 'tax_advisory',      name: 'Tax Advisory', price: '$330 / hour', scope: 'Ad-hoc tax advice — structuring, CGT, deductions, ATO correspondence and planning, provided in writing where required.' },
-  { key: 'mgmt_accounting',   name: 'Management Accounting', price: 'From $450 / month', scope: 'Management reporting, budgeting, cashflow forecasting and KPI analysis to support business decisions.' },
-  { key: 'business_consulting', name: 'Business Consulting', price: '$250 / hour', scope: 'Advisory on business structure, systems, pricing and growth, scoped to your objectives.' },
-  { key: 'asic_secretary',    name: 'ASIC Company Secretarial', price: 'From $220 / year + ASIC fees', scope: 'Registered agent for ASIC — annual review, changes to officeholders/shares/address, and statutory register maintenance.' },
+  { key: 'bookkeeping',        name: 'Monthly Bookkeeping', price: 'From $199 / month +GST', scope: 'Monthly bank reconciliation, transaction coding with GST treatment, and monthly P&L and balance sheet delivered in your portal. Tax-ready books for your accountant at year end.' },
+  { key: 'bookkeeping_budget', name: 'Bookkeeping + Budgeting', price: 'From $399 / month +GST', scope: 'Everything in Monthly Bookkeeping plus an annual budget built with you, budget-vs-actual reporting each month, and cashflow tracking with a quarterly check-in call.' },
+  { key: 'management_acct',    name: 'Management Accounting', price: 'From $699 / month +GST', scope: 'The full monthly finance function: management report pack with commentary, GST-coded books, BAS-ready figures prepared each cycle for your registered agent, FBT record keeping, and a year-end pack prepared to professional standard.' },
+  { key: 'cleanup_setup',      name: 'Clean-up & Setup', price: 'From $499 fixed +GST', scope: 'One-off catch-up engagement: historical bookkeeping brought up to date, chart of accounts design, Xero or portal setup and migration, with a fixed quote before we start.' },
+  { key: 'fbt_records',        name: 'FBT Record Keeping & Calculations', price: 'Quoted', scope: 'Fringe benefits tax record keeping and calculation working papers - logbooks, declarations and benefit registers maintained through the FBT year for your registered tax agent.' },
 ];
 
 function engagementLetterText(svc) {
