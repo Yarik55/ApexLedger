@@ -132,6 +132,7 @@
         <button data-tab="gst" role="tab">🧾 GST &amp; ABN</button>
         <button data-tab="cgt" role="tab">📈 Capital gains</button>
         <button data-tab="div7a" role="tab">🏦 Division 7A</button>
+        <button data-tab="fbt" role="tab">🚗 FBT</button>
       </div>
     </div>
   </div>
@@ -550,6 +551,59 @@
   </div>
 </div>
 </div>
+  <div id="panel-fbt" class="tab-panel"><div class="container">
+  <div class="page-band fade-up">
+    <div class="section-label">Free tool</div>
+    <h2>FBT calculator</h2>
+    <p style="color: var(--muted-light); font-size: 15px; max-width: 640px; margin: 0;">
+      Fringe benefits tax, benefit by benefit — cars, parking, loans, expenses and meals
+      (FBT year runs 1 April – 31 March; rate 47%). Pick a benefit type, and remember:
+      <strong>general information based only on what you enter</strong>. Chapter numbers refer
+      to the ATO's <a href="https://www.ato.gov.au/law/view/document?DocID=SAV%2FFBTGEMP%2F00001"
+      target="_blank" rel="noopener" style="color: var(--blue-bright);">FBT guide for employers</a>.
+    </p>
+    <div class="calc-toggle" id="fbtTypes" style="margin-top: 16px;">
+      <button data-fbt="car_stat" class="active">🚗 Car — statutory</button>
+      <button data-fbt="car_log">📒 Car — logbook</button>
+      <button data-fbt="parking">🅿️ Car parking</button>
+      <button data-fbt="loan">💵 Loan</button>
+      <button data-fbt="expense">🧾 Expense payment</button>
+      <button data-fbt="meals">🍽️ Meal entertainment</button>
+      <button data-fbt="other">📦 Other</button>
+    </div>
+  </div>
+
+  <div class="calc-grid fade-up-2">
+    <section class="card">
+      <div class="section-label" id="fbtAreaLabel">Car — statutory formula (ch 7)</div>
+      <p style="color: var(--muted-light); font-size: 13px;" id="fbtAreaHint"></p>
+      <div id="fbtFields" style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;"></div>
+      <label style="font-size: 13px; color: var(--text-secondary); display: flex; gap: 8px; align-items: center; margin-top: 12px;">
+        <input type="checkbox" id="fbtGstCred" checked>
+        GST credit was available on the benefit (Type 1 gross-up, ×2.0802)
+      </label>
+    </section>
+
+    <section class="card">
+      <div class="section-label">Result</div>
+      <div id="fbtOut"><p style="color: var(--text-muted); font-size: 14px;">Enter the details to see the FBT.</p></div>
+      <p class="fine" id="fbtNote"></p>
+    </section>
+  </div>
+
+  <div class="calc-grid" style="margin-top: 20px;">
+    <section class="card">
+      <span class="supply-tag tag-free">Before you pay FBT, check the exemptions</span>
+      <ul style="font-size: 13px; color: var(--text-secondary); padding-left: 18px; margin: 8px 0 0; line-height: 1.7;">
+        <li><strong>Minor benefits</strong> — under $300 (GST-inclusive), provided infrequently and irregularly → generally exempt (ch 20).</li>
+        <li><strong>Work tools</strong> — portable devices, protective clothing, tools of trade used mainly for work → exempt (ch 20).</li>
+        <li><strong>Otherwise deductible</strong> — if the employee could have claimed the expense as a deduction themselves, the taxable value drops by that portion (declaration required).</li>
+        <li><strong>Records</strong> — logbooks (12 weeks, valid 5 FBT years), odometer readings, employee declarations. Good records are the whole game — that's the part we do.</li>
+      </ul>
+    </section>
+  </div>
+</div>
+</div>
 </main>
 
 <footer>
@@ -571,7 +625,7 @@
 (function () {
   var tabs = document.querySelectorAll('.calc-tabs button');
   function show(name) {
-    var valid = ['tax', 'gst', 'cgt', 'div7a'];
+    var valid = ['tax', 'gst', 'cgt', 'div7a', 'fbt'];
     if (valid.indexOf(name) === -1) name = 'tax';
     tabs.forEach(function (b) { b.classList.toggle('active', b.dataset.tab === name); });
     valid.forEach(function (v) {
@@ -989,6 +1043,152 @@ window.setGstMode=setGstMode;window.calcGst=calcGst;window.calcReg=calcReg;windo
   });
 })();
 
+</script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var fmt = function (n) {
+    return '$' + n.toLocaleString('en-AU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+  var RATE = 0.47, T1 = 2.0802, T2 = 1.8868;
+
+  var AREAS = {
+    car_stat: {
+      label: 'Car — statutory formula (ch 7)',
+      hint: 'Taxable value = base value × 20% × days available for private use ÷ 365, less employee contributions.',
+      fields: [
+        ['base', 'Base value of the car ($)', 'e.g. 40000'],
+        ['days', 'Days available for private use', 'e.g. 365'],
+        ['contrib', 'Employee contribution ($)', '0'],
+      ],
+      calc: function (v) {
+        var days = Math.min(365, Math.max(0, v.days));
+        return Math.max(0, v.base * 0.20 * (days / 365) - v.contrib);
+      },
+    },
+    car_log: {
+      label: 'Car — operating cost / logbook (ch 7)',
+      hint: 'Taxable value = total operating costs × private-use %, less contributions. Needs a valid 12-week logbook.',
+      fields: [
+        ['costs', 'Total operating costs for the year ($)', 'fuel, rego, insurance, depreciation…'],
+        ['bizpct', 'Business use % (from the logbook)', 'e.g. 60'],
+        ['contrib', 'Employee contribution ($)', '0'],
+      ],
+      calc: function (v) {
+        var biz = Math.min(100, Math.max(0, v.bizpct));
+        return Math.max(0, v.costs * (1 - biz / 100) - v.contrib);
+      },
+    },
+    parking: {
+      label: 'Car parking (ch 16)',
+      hint: 'Simplified: days the space was provided × the daily rate (e.g. lowest local commercial parking fee), less contributions. Small-business exemptions may apply.',
+      fields: [
+        ['days', 'Parking benefit days in the FBT year', 'e.g. 220'],
+        ['rate', 'Value per day ($)', 'e.g. 12'],
+        ['contrib', 'Employee contribution ($)', '0'],
+      ],
+      calc: function (v) { return Math.max(0, v.days * v.rate - v.contrib); },
+    },
+    loan: {
+      label: 'Loan benefit (ch 8)',
+      hint: 'A loan to an employee below the benchmark rate — the taxable value is the interest saved.',
+      fields: [
+        ['loan', 'Loan balance ($)', 'e.g. 100000'],
+        ['bench', 'Benchmark interest rate (%)', '8.77 — check the ATO for this year'],
+        ['actual', 'Interest rate actually charged (%)', 'e.g. 2'],
+      ],
+      calc: function (v) { return Math.max(0, v.loan * Math.max(0, v.bench - v.actual) / 100); },
+      defaults: { bench: 8.77 },
+    },
+    expense: {
+      label: 'Expense payment (ch 9)',
+      hint: 'You paid or reimbursed an employee’s private expense. The otherwise-deductible rule reduces the value by whatever they could have deducted themselves (declaration needed).',
+      fields: [
+        ['amount', 'Amount paid / reimbursed ($)', 'e.g. 2000'],
+        ['odpct', 'Otherwise-deductible % (0–100)', 'e.g. 80'],
+      ],
+      calc: function (v) {
+        var od = Math.min(100, Math.max(0, v.odpct));
+        return Math.max(0, v.amount * (1 - od / 100));
+      },
+    },
+    meals: {
+      label: 'Meal entertainment (ch 14)',
+      hint: 'Actual method: the employee/associate portion of the cost. 50/50 method: half of ALL meal entertainment for the year, regardless of who attended.',
+      fields: [
+        ['amount', 'Meal entertainment cost ($)', 'e.g. 10000'],
+        ['half', 'Using the 50/50 method? (1 = yes, 0 = no)', '0'],
+      ],
+      calc: function (v) { return Math.max(0, v.half >= 1 ? v.amount * 0.5 : v.amount); },
+    },
+    other: {
+      label: 'Other benefit (property, residual — ch 17–18)',
+      hint: 'Enter the taxable value directly — e.g. the market value of goods provided, less any amount the employee paid.',
+      fields: [
+        ['amount', 'Taxable value ($)', 'e.g. 1500'],
+      ],
+      calc: function (v) { return Math.max(0, v.amount); },
+    },
+  };
+
+  var current = 'car_stat';
+
+  function renderFields() {
+    var a = AREAS[current];
+    $('fbtAreaLabel').textContent = a.label;
+    $('fbtAreaHint').textContent = a.hint;
+    $('fbtFields').innerHTML = a.fields.map(function (f) {
+      var def = a.defaults && a.defaults[f[0]] != null ? ' value="' + a.defaults[f[0]] + '"' : '';
+      return '<div class="calc-field"><label for="fbt_' + f[0] + '">' + f[1] + '</label>' +
+        '<input type="number" step="0.01" min="0" id="fbt_' + f[0] + '" placeholder="' + f[2] + '"' + def + '></div>';
+    }).join('');
+    a.fields.forEach(function (f) {
+      $('fbt_' + f[0]).addEventListener('input', calcFbt);
+    });
+    calcFbt();
+  }
+
+  function calcFbt() {
+    var a = AREAS[current];
+    var v = {}, any = false;
+    a.fields.forEach(function (f) {
+      var raw = parseFloat($('fbt_' + f[0]).value);
+      v[f[0]] = isFinite(raw) ? raw : 0;
+      if (isFinite(raw) && raw > 0) any = true;
+    });
+    var out = $('fbtOut'), note = $('fbtNote');
+    if (!any) {
+      out.innerHTML = '<p style="color: var(--text-muted); font-size: 14px;">Enter the details to see the FBT.</p>';
+      note.textContent = '';
+      return;
+    }
+    var taxable = a.calc(v);
+    var t1 = $('fbtGstCred').checked;
+    var factor = t1 ? T1 : T2;
+    var grossed = taxable * factor;
+    var fbt = grossed * RATE;
+
+    out.innerHTML = '<div class="calc-result" style="border-top:none;padding-top:0;">' +
+      '<div class="calc-row"><span>Taxable value</span><strong>' + fmt(taxable) + '</strong></div>' +
+      '<div class="calc-row"><span>Gross-up (' + (t1 ? 'Type 1 × 2.0802' : 'Type 2 × 1.8868') + ')</span><strong>' + fmt(grossed) + '</strong></div>' +
+      '<div class="calc-row hero-line"><span>FBT @ 47%</span><strong>' + fmt(fbt) + '</strong></div>' +
+      '</div>';
+    note.textContent = 'For one benefit, for one employee, for one FBT year — based only on what you entered. ' +
+      'Employers add all grossed-up amounts together in the FBT return, and reportable fringe benefits can appear on payment summaries. ' +
+      'FBT returns are lodged by a registered tax agent; we keep the records and working papers that make it painless.';
+  }
+
+  var btns = document.querySelectorAll('#fbtTypes button');
+  btns.forEach(function (b) {
+    b.addEventListener('click', function () {
+      current = b.dataset.fbt;
+      btns.forEach(function (x) { x.classList.toggle('active', x === b); });
+      renderFields();
+    });
+  });
+  $('fbtGstCred').addEventListener('change', calcFbt);
+  renderFields();
+})();
 </script>
 <script src="matrix.js" defer></script>
 <script src="consent.js" defer></script>
