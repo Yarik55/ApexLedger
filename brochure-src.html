@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ApexLedger — Bookkeeping &amp; Management Accounting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:      #0D1B35;
+    --navy-mid:  #1B2F52;
+    --blue:      #2563EB;
+    --blue-br:   #3B82F6;
+    --blue-soft: #EEF3FE;
+    --ink:       #16202F;
+    --muted:     #5A6B85;
+    --rule:      #DCE3ED;
+    --green:     #047857;
+    --display: 'Syne', ui-sans-serif, system-ui, sans-serif;
+    --body: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  @page { size: A4; margin: 0; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    margin: 0; font-family: var(--body); color: var(--ink);
+    font-size: 10.5pt; line-height: 1.6; background: #fff;
+  }
+
+  .page {
+    width: 210mm; min-height: 297mm; padding: 18mm 17mm 16mm;
+    position: relative; page-break-after: always; display: flex; flex-direction: column;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  /* ── Cover ─────────────────────────────────────────── */
+  .cover { padding: 0; }
+  .cover-band {
+    background: var(--navy); color: #fff;
+    padding: 30mm 17mm 22mm; position: relative; overflow: hidden; width: 210mm;
+  }
+  .cover-band::after {
+    content: ''; position: absolute; right: -30mm; top: -30mm;
+    width: 90mm; height: 90mm; border-radius: 50%;
+    background: radial-gradient(circle, rgba(59,130,246,.30) 0%, transparent 68%);
+  }
+  .wordmark { font-family: var(--display); font-size: 27pt; font-weight: 800; letter-spacing: -.01em; margin: 0; }
+  .wordmark span { color: var(--blue-br); }
+  .tagline {
+    font-size: 8.5pt; letter-spacing: .22em; text-transform: uppercase;
+    color: #8FA3C0; margin: 3mm 0 0;
+  }
+  .cover-h1 {
+    font-family: var(--display); font-size: 33pt; font-weight: 700;
+    line-height: 1.1; margin: 20mm 0 6mm; letter-spacing: -.02em; position: relative; z-index: 1;
+  }
+  .cover-h1 em { color: var(--blue-br); font-style: normal; }
+  .cover-sub { font-size: 12pt; color: #C7D5EA; max-width: 125mm; margin: 0; font-weight: 300; position: relative; z-index: 1; }
+  .cover-body { padding: 14mm 17mm 0; flex: 1; }
+  .cover-foot {
+    padding: 0 17mm 14mm; display: flex; justify-content: space-between;
+    align-items: flex-end; font-size: 9pt; color: var(--muted);
+  }
+  .cover-foot strong { color: var(--navy); font-size: 11pt; }
+
+  .inside {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4mm 9mm;
+    border-top: 2px solid var(--navy); padding-top: 6mm;
+  }
+  .inside h4 {
+    font-family: var(--body); font-size: 8pt; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--blue); margin: 0 0 5mm; grid-column: 1 / -1;
+  }
+  .inside-item { display: flex; gap: 3mm; align-items: baseline; font-size: 10pt; }
+  .inside-item span {
+    font-family: var(--display); font-weight: 700; color: var(--blue-br);
+    font-size: 9pt; min-width: 6mm;
+  }
+
+  /* ── Sections ──────────────────────────────────────── */
+  .eyebrow {
+    font-size: 8pt; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--blue); margin: 0 0 3mm; font-weight: 600;
+  }
+  h2 {
+    font-family: var(--display); font-size: 20pt; font-weight: 700;
+    line-height: 1.15; margin: 0 0 4mm; letter-spacing: -.015em; color: var(--navy);
+  }
+  h3 { font-family: var(--display); font-size: 12.5pt; font-weight: 700; margin: 0 0 2mm; color: var(--navy); }
+  p { margin: 0 0 4mm; max-width: 165mm; }
+  .lead { font-size: 11.5pt; color: var(--muted); margin-bottom: 8mm; font-weight: 300; }
+
+  .steps { display: grid; gap: 5mm; margin: 6mm 0 9mm; }
+  .step { display: flex; gap: 5mm; align-items: flex-start; }
+  .step-n {
+    font-family: var(--display); font-weight: 700; font-size: 11pt; color: #fff;
+    background: var(--navy); width: 9mm; height: 9mm; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .step p { margin: 1mm 0 0; font-size: 10pt; color: var(--muted); }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 7mm; margin: 6mm 0; }
+  .feat {
+    border: 1px solid var(--rule); border-radius: 2mm; padding: 5mm 5.5mm; background: #fff;
+  }
+  .feat h3 { font-size: 11pt; margin-bottom: 1.5mm; }
+  .feat p { font-size: 9.5pt; color: var(--muted); margin: 0; }
+
+  ul.ticks { list-style: none; padding: 0; margin: 4mm 0; }
+  ul.ticks li {
+    padding-left: 7mm; position: relative; margin-bottom: 2.5mm; font-size: 10pt;
+  }
+  ul.ticks li::before {
+    content: '✓'; position: absolute; left: 0; color: var(--green); font-weight: 700;
+  }
+
+  /* ── Pricing ───────────────────────────────────────── */
+  .tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; margin: 7mm 0 6mm; }
+  .tier {
+    border: 1px solid var(--rule); border-radius: 2mm; padding: 6mm 5mm;
+    display: flex; flex-direction: column;
+  }
+  .tier.featured { border: 1.5px solid var(--blue); background: var(--blue-soft); }
+  .tier-badge {
+    font-size: 7.5pt; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--blue); font-weight: 600; margin-bottom: 2mm; min-height: 4mm;
+  }
+  .tier h3 { font-size: 12pt; margin-bottom: 2mm; }
+  .tier .price {
+    font-family: var(--display); font-size: 21pt; font-weight: 800;
+    color: var(--navy); margin: 2mm 0 0; letter-spacing: -.02em;
+  }
+  .tier .price small { font-family: var(--body); font-size: 8.5pt; font-weight: 400; color: var(--muted); display: block; margin-top: 1mm; }
+  .tier hr { border: none; border-top: 1px solid var(--rule); margin: 4mm 0; }
+  .tier ul { list-style: none; padding: 0; margin: 0; font-size: 9pt; color: var(--muted); }
+  .tier ul li { padding-left: 4.5mm; position: relative; margin-bottom: 2mm; line-height: 1.45; }
+  .tier ul li::before { content: '·'; position: absolute; left: 1mm; color: var(--blue-br); font-weight: 700; }
+
+  .oneoff {
+    border-left: 3px solid var(--blue); background: var(--blue-soft);
+    padding: 5mm 6mm; border-radius: 0 2mm 2mm 0; margin-bottom: 5mm;
+  }
+  .oneoff h3 { margin-bottom: 1.5mm; }
+  .oneoff p { font-size: 9.5pt; color: var(--muted); margin: 0; }
+
+  .note-band {
+    background: var(--navy); color: #C7D5EA; padding: 6mm 6.5mm;
+    border-radius: 2mm; font-size: 9.5pt; line-height: 1.6;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .note-band strong { color: #fff; }
+
+  /* ── Close ─────────────────────────────────────────── */
+  .cta-band {
+    background: var(--navy); color: #fff; border-radius: 2mm;
+    padding: 9mm 8mm; break-inside: avoid; page-break-inside: avoid;
+  }
+  .cta-band h2 { color: #fff; font-size: 18pt; margin-bottom: 3mm; }
+  .cta-band p { color: #C7D5EA; font-size: 10.5pt; max-width: 130mm; }
+  .cta-url {
+    font-family: var(--display); font-weight: 700; font-size: 13pt;
+    color: var(--blue-br); margin: 5mm 0 0; display: block; text-decoration: none;
+  }
+  .foot-rule {
+    border-top: 1px solid var(--rule); margin-top: 7mm; padding-top: 4mm;
+    font-size: 8pt; color: var(--muted); line-height: 1.55;
+  }
+  .pagenum {
+    position: absolute; bottom: 10mm; right: 17mm;
+    font-size: 8pt; color: var(--muted); font-family: var(--display); font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ PAGE 1 — COVER ══════════════════════════════════ -->
+<section class="page cover">
+  <div class="cover-band">
+    <p class="wordmark">Apex<span>Ledger</span></p>
+    <p class="tagline">Bookkeeping · Reports · Tax-Ready</p>
+    <h1 class="cover-h1">Your books, clean<br>and tax-ready.<br><em>Every single month.</em></h1>
+    <p class="cover-sub">
+      Bookkeeping and management accounting for Australian small businesses —
+      reconciled, GST-coded, and handed to your accountant ready to go.
+    </p>
+  </div>
+
+  <div class="cover-body">
+    <div class="inside">
+      <h4>What's inside</h4>
+      <div class="inside-item"><span>01</span><div>What we do, and who it's for</div></div>
+      <div class="inside-item"><span>02</span><div>How it works — three steps</div></div>
+      <div class="inside-item"><span>03</span><div>Plans and fixed monthly pricing</div></div>
+      <div class="inside-item"><span>04</span><div>Your client portal and free tools</div></div>
+      <div class="inside-item"><span>05</span><div>How we work with your registered agent</div></div>
+      <div class="inside-item"><span>06</span><div>Getting started</div></div>
+    </div>
+  </div>
+
+  <div class="cover-foot">
+    <div>
+      <strong>apexledger.com.au</strong><br>
+      Bookkeeping &amp; management accounting · Australia
+    </div>
+    <div style="text-align:right;">
+      Capability statement<br>2026
+    </div>
+  </div>
+</section>
+
+<!-- ══ PAGE 2 — WHAT WE DO / HOW IT WORKS ══════════════ -->
+<section class="page">
+  <p class="eyebrow">01 · What we do</p>
+  <h2>Numbers you can actually run the business on</h2>
+  <p class="lead">
+    Most small businesses see their real position once a year — at tax time, when it's
+    far too late to act on it. We close your books every month, so the decisions happen
+    while they still matter.
+  </p>
+
+  <ul class="ticks">
+    <li>Transactions reconciled and GST-coded, every month — not reconstructed in October</li>
+    <li>Monthly profit &amp; loss, balance sheet and budget-vs-actual reporting</li>
+    <li>Tax-ready books and a year-end pack your accountant will thank you for</li>
+    <li>BAS-ready figures each cycle, prepared for your registered agent to lodge</li>
+    <li>Receipts and documents captured against the transactions they belong to</li>
+    <li>Questions answered in the portal chat — not in six weeks</li>
+  </ul>
+
+  <p class="eyebrow" style="margin-top:9mm;">02 · How it works</p>
+  <h2>From messy to monthly in three steps</h2>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">1</div>
+      <div>
+        <h3>A free books check</h3>
+        <p>A 30-minute call. We look at where your books actually are, what shape the
+        records are in, and quote you a fixed monthly fee — no timesheets, no surprises.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">2</div>
+      <div>
+        <h3>Setup and catch-up</h3>
+        <p>We clear the backlog, design a chart of accounts that suits your business,
+        and connect your records. Behind on the books? That's a fixed-fee clean-up.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">3</div>
+      <div>
+        <h3>A monthly rhythm</h3>
+        <p>Reconciled books, your report pack, and BAS-ready figures delivered to your
+        portal every month. You always know your position; your agent always gets clean books.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="note-band">
+    <strong>Who this suits.</strong> Sole traders and small companies who are past the
+    spreadsheet stage — tradies, consultants, online sellers, allied health, and service
+    businesses that need their numbers to be right and current, without hiring someone in-house.
+  </div>
+
+  <div class="pagenum">2</div>
+</section>
+
+<!-- ══ PAGE 3 — PRICING ════════════════════════════════ -->
+<section class="page">
+  <p class="eyebrow">03 · Plans</p>
+  <h2>Fixed monthly fees. No timesheets, no surprises.</h2>
+  <p class="lead">
+    Every plan includes the client portal — dashboards, a secure document vault and chat —
+    and every plan delivers books that are reconciled, GST-coded and tax-ready.
+  </p>
+
+  <div class="tiers">
+    <div class="tier">
+      <div class="tier-badge">Get the basics right</div>
+      <h3>Bookkeeping</h3>
+      <div class="price">$199<small>per month +GST, from</small></div>
+      <hr>
+      <ul>
+        <li>Bank &amp; credit card reconciliation, monthly</li>
+        <li>Transaction coding with GST treatment</li>
+        <li>Monthly P&amp;L and balance sheet</li>
+        <li>Receipt &amp; document capture</li>
+        <li>Tax-ready books at year end</li>
+        <li>Chat support with your bookkeeper</li>
+      </ul>
+    </div>
+
+    <div class="tier featured">
+      <div class="tier-badge">Most popular</div>
+      <h3>Bookkeeping + Budgeting</h3>
+      <div class="price">$399<small>per month +GST, from</small></div>
+      <hr>
+      <ul>
+        <li>Everything in Bookkeeping</li>
+        <li>Annual budget built with you</li>
+        <li>Budget-vs-actual every month</li>
+        <li>Cashflow tracking and alerts</li>
+        <li>Quarterly check-in call</li>
+        <li>Priority chat response</li>
+      </ul>
+    </div>
+
+    <div class="tier">
+      <div class="tier-badge">Run on numbers</div>
+      <h3>Management Accounting</h3>
+      <div class="price">$699<small>per month +GST, from</small></div>
+      <hr>
+      <ul>
+        <li>Everything in Budgeting</li>
+        <li>Management report pack with commentary</li>
+        <li>BAS-ready figures each cycle</li>
+        <li>FBT record keeping &amp; working papers</li>
+        <li>Year-end pack to professional standard</li>
+        <li>Monthly review call</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="oneoff">
+    <h3>Behind on the books? Start with a clean-up — from $499 +GST</h3>
+    <p>
+      A fixed-fee catch-up, quoted before we start: historical bookkeeping brought up to
+      date, chart of accounts designed properly, Xero or portal setup and migration, and a
+      clean handover into a monthly plan — or back to you, if you'd rather run it yourself.
+    </p>
+  </div>
+
+  <p style="font-size:9.5pt; color:var(--muted);">
+    Prices are from-pricing and exclude GST. Your fixed quote comes out of the free
+    30-minute books check, once we've seen the actual state and volume of your records.
+  </p>
+
+  <div class="pagenum">3</div>
+</section>
+
+<!-- ══ PAGE 4 — PORTAL, POSITIONING, CTA ═══════════════ -->
+<section class="page">
+  <p class="eyebrow">04 · The platform</p>
+  <h2>A portal, not an email chain</h2>
+  <p class="lead">
+    Every client gets a secure portal. Your documents, your numbers and your accountant
+    all in one place — on the web and on your phone.
+  </p>
+
+  <div class="two-col">
+    <div class="feat">
+      <h3>Secure document vault</h3>
+      <p>Upload receipts, invoices and statements. Everything filed, searchable, and
+      access-logged — never a lost email attachment.</p>
+    </div>
+    <div class="feat">
+      <h3>Live dashboards</h3>
+      <p>Profit &amp; loss, balance sheet, budgets and your tax position, updated as the
+      books are done — not once a year.</p>
+    </div>
+    <div class="feat">
+      <h3>Chat with your bookkeeper</h3>
+      <p>Ask a question where the records are. No email chains, no wondering whether it
+      was received.</p>
+    </div>
+    <div class="feat">
+      <h3>Approvals and e-signing</h3>
+      <p>Review and approve activity statements and engagement letters in the portal,
+      with a full audit trail.</p>
+    </div>
+  </div>
+
+  <p style="font-size:10pt; margin-top:2mm;">
+    <strong>Free tools, no sign-up:</strong> income tax and take-home pay, GST and ABN
+    checker, capital gains, Division 7A, and FBT — plus a downloadable vehicle logbook
+    workpaper. All at <strong>apexledger.com.au/calculators.html</strong>
+  </p>
+
+  <p class="eyebrow" style="margin-top:9mm;">Before the call</p>
+  <h2 style="font-size:16pt;">What we'll ask you for</h2>
+  <p style="font-size:10pt; color:var(--muted); margin-bottom:5mm;">
+    Nothing needs to be tidy — that's our job. Having these to hand just makes the
+    first conversation faster and the quote more accurate.
+  </p>
+  <ul class="ticks" style="margin-bottom:7mm;">
+    <li><strong>Your records, as they are</strong> — the last few months of bank and card
+        statements, or read-only access to your accounting file. Shoeboxes accepted.</li>
+    <li><strong>Your entity details</strong> — ABN, business structure, whether you're
+        registered for GST and how often you report it.</li>
+    <li><strong>Any software you already use</strong> — Xero, MYOB, QuickBooks or a
+        spreadsheet. We work with what you have, or set something up properly.</li>
+    <li><strong>Who lodges for you</strong> — your registered tax or BAS agent, if you
+        have one. If you don't, we can point you to good ones.</li>
+  </ul>
+
+  <div class="pagenum">4</div>
+</section>
+
+<!-- ══ PAGE 5 — POSITIONING + CTA ════════════════ -->
+<section class="page">
+  <p class="eyebrow">05 · Straight talk</p>
+  <h2>We prepare. Your registered agent lodges.</h2>
+  <div class="note-band" style="margin-bottom:6mm;">
+    ApexLedger is a bookkeeping and management-accounting practice. <strong>We are not
+    currently a registered tax or BAS agent, and we do not lodge.</strong> What we do is
+    make lodgement easy — GST-coded books, BAS-ready figures and a year-end pack prepared
+    to professional standard, handed to the registered agent of your choice. If you don't
+    have one, we can point you to good ones. Tax and BAS lodgement services are on our
+    roadmap, pending registration.
+    <br><br>
+    Your data is held encrypted in Australia (Sydney), with row-level isolation so each
+    client can only ever reach their own records, and sensitive details such as tax file
+    numbers are vault-encrypted — never stored in plain text.
+  </div>
+
+  <div class="cta-band">
+    <p class="eyebrow" style="color:var(--blue-br);">06 · Getting started</p>
+    <h2>Book a free 30-minute books check</h2>
+    <p>
+      Bring your current books in whatever state they're in. We'll tell you honestly what
+      needs doing, what it will cost as a fixed monthly fee, and what you'd get back for it.
+      No obligation, and no jargon.
+    </p>
+    <a class="cta-url" href="https://apexledger.com.au/contact.html">apexledger.com.au/contact.html</a>
+  </div>
+
+  <div class="foot-rule">
+    ApexLedger — bookkeeping &amp; management accounting for Australian small business.
+    This document is general information about our services and does not constitute tax,
+    legal or financial advice. Pricing is indicative from-pricing and excludes GST; your
+    fee is fixed in writing before any work begins.
+  </div>
+
+  <div class="pagenum">5</div>
+</section>
+
+<script>
+  // Signal to the PDF renderer once webfonts have settled.
+  (async function () {
+    if (document.fonts && document.fonts.ready) { await document.fonts.ready; }
+    document.title = 'READY — ' + document.title;
+  })();
+</script>
+</body>
+</html>
