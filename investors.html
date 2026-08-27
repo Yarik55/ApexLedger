@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Build Progress | ApexLedger</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ApexLedger build progress — what is shipped, what is in progress, and what completing the platform requires.">
+  <!-- Investors are given this URL directly. It is deliberately kept out of
+       search and out of the site navigation: the public site is a practice
+       site, and a build-status page sitting in it would read oddly to a
+       prospective client. -->
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="og-image.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ApexLedger">
+  <meta property="og:title" content="Build Progress | ApexLedger">
+  <meta property="og:description" content="What is shipped, what is in progress, and what completing the platform requires.">
+  <meta property="og:url" content="https://apexledger.com.au/investors.html">
+  <meta property="og:image" content="https://apexledger.com.au/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Build Progress | ApexLedger">
+  <meta name="twitter:description" content="What is shipped, what is in progress, and what completing the platform requires.">
+  <meta name="twitter:image" content="https://apexledger.com.au/og-image.png">
+  <link rel="canonical" href="https://apexledger.com.au/investors.html">
+  <meta name="theme-color" content="#0D1B35">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Local to this page only — style.css is shared with the client-facing
+       site and is deliberately left untouched. */
+    .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+      background: var(--border); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 24px; }
+    .stat-row div { background: var(--card); padding: 20px 18px; }
+    .stat-row .n { display: block; font-family: 'Syne', sans-serif; font-size: 30px;
+      font-weight: 800; color: var(--blue-bright); line-height: 1;
+      font-variant-numeric: tabular-nums; }
+    .stat-row .l { display: block; margin-top: 8px; font-size: 12.5px;
+      line-height: 1.45; color: var(--text-muted); }
+
+    .stack { list-style: none; margin: 0; padding: 0; display: flex;
+      flex-direction: column; gap: 1px; background: var(--border);
+      border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+    .stack > li { background: var(--card); padding: 14px 16px; display: flex;
+      gap: 14px; align-items: baseline; flex-wrap: wrap; }
+    .stack .t { flex: 1 1 260px; }
+    .stack .t b { color: var(--text); font-weight: 600; font-size: 15px; }
+    .stack .t span { display: block; color: var(--text-muted); font-size: 13.5px;
+      line-height: 1.55; margin-top: 3px; }
+
+    .st { font-size: 10.5px; font-weight: 600; letter-spacing: 0.09em;
+      text-transform: uppercase; padding: 5px 10px; border-radius: 999px;
+      white-space: nowrap; }
+    .st-done { background: rgba(34, 211, 165, 0.12); color: var(--success);
+      border: 1px solid rgba(34, 211, 165, 0.3); }
+    .st-wip { background: rgba(251, 191, 36, 0.12); color: #fbbf24;
+      border: 1px solid rgba(251, 191, 36, 0.3); }
+
+    .path { list-style: none; counter-reset: s; margin: 0; padding: 0;
+      display: flex; flex-direction: column; gap: 18px; }
+    .path li { counter-increment: s; display: grid;
+      grid-template-columns: 32px 1fr; gap: 3px 14px; }
+    /* The marker spans both rows in column one; heading and body both sit in
+       column two, or the paragraph drops into the 32px marker column. */
+    .path li::before { content: counter(s); grid-column: 1; grid-row: span 2;
+      height: 30px; line-height: 30px; text-align: center; border-radius: 50%;
+      font-size: 12.5px; font-weight: 600; color: var(--blue-bright);
+      background: rgba(59, 130, 246, 0.12); border: 1px solid var(--border-mid); }
+    .path li h4 { grid-column: 2; margin: 0; font-size: 15px; color: var(--text); }
+    .path li p { grid-column: 2; margin: 0; font-size: 14px; line-height: 1.6;
+      color: var(--text-muted); }
+
+    .callout { border: 1px dashed var(--border-mid); border-radius: var(--radius);
+      padding: 14px 16px; color: var(--text-muted); font-size: 14px; line-height: 1.65; }
+    .callout b { color: var(--text); }
+
+    @media (max-width: 720px) {
+      .stat-row { grid-template-columns: 1fr 1fr; }
+    }
+    @media (min-width: 760px) {
+      /* style.css sets .grid.two to 1.35fr/0.65fr for a main-plus-sidebar
+         layout. These two cards carry equal weight, so even them up here
+         rather than changing the shared stylesheet. */
+      .grid.two.even { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container header-inner">
+    <div class="brand">
+      <h1>Apex<span>Ledger</span></h1>
+      <p>Build progress</p>
+    </div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="services.html">Plans</a>
+      <a href="resources.html">Resources</a>
+      <a href="calculators.html">Calculators</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+      <a href="login.html" class="login-link">Login</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+
+    <div class="page-band fade-up">
+      <div class="section-label">Investor brief · August 2026</div>
+      <h2>Built and working.<br><em>Not a prototype deck.</em></h2>
+      <p style="color: var(--muted-light); font-size: 15px; max-width: 620px; margin: 0;">
+        ApexLedger is a multi-tenant platform for Australian accounting practices: one
+        system where a firm runs its clients' books, prepares BAS and FBT working papers,
+        collects tax-return information, and gives every client a portal of their own —
+        with an AI assistant that answers from the client's actual ledger, and a
+        qualified human signing off on everything that leaves the practice.
+      </p>
+    </div>
+
+    <div class="stat-row fade-up-2">
+      <div><span class="n">23</span><span class="l">tables in the multi-tenant schema</span></div>
+      <div><span class="n">76</span><span class="l">row-level security policies</span></div>
+      <div><span class="n">3</span><span class="l">roles: owner, accountant, client</span></div>
+      <div><span class="n">AU</span><span class="l">data resident in Sydney</span></div>
+    </div>
+
+    <section class="card fade-up-2" style="margin-bottom: 24px;">
+      <div class="section-label">What exists today</div>
+      <h2>Shipped, in progress, and next.</h2>
+      <p style="color: var(--muted-light); font-size: 15px;">
+        Every line below is running code against a live Postgres schema with row-level
+        security on every table. Status is marked honestly — the items still open are
+        listed alongside the ones that are done.
+      </p>
+      <hr class="divider">
+      <ul class="stack">
+        <li><span class="t"><b>Multi-tenant practice model</b><span>Practices → clients → everything else. Employees are scoped to only their assigned clients; the owner sees the whole practice.</span></span><span class="st st-done">Shipped</span></li>
+        <li><span class="t"><b>GST-coded cashbook, P&amp;L and balance sheet</b><span>Signed-amount ledger with GST treatment per transaction, categorised reporting, budgets and budget-vs-actual.</span></span><span class="st st-done">Shipped</span></li>
+        <li><span class="t"><b>BAS &amp; IAS preparation</b><span>G-labels generated from the coded ledger for the client's registered agent to lodge, with in-portal approval and e-signature.</span></span><span class="st st-done">Shipped</span></li>
+        <li><span class="t"><b>FBT working papers</b><span>Logbooks, declarations and benefit registers maintained across the FBT year.</span></span><span class="st st-done">Shipped</span></li>
+        <li><span class="t"><b>Tax-return collection and review queue</b><span>Structured client interview producing a workpaper, then a practitioner review queue.</span></span><span class="st st-done">Shipped</span></li>
+        <li><span class="t"><b>Client portal</b><span>Documents with e-signature, engagement letters issued and accepted in-portal as PDFs, secure messaging, live dashboards.</span></span><span class="st st-done">Shipped</span></li>
+        <li><span class="t"><b>AI assistant in client chat</b><span>Consent-gated, scoped to accounting and tax, grounded in that client's own ledger. Demonstration build.</span></span><span class="st st-done">Shipped</span></li>
+        <li><span class="t"><b>Microsoft Teams integration</b><span>Client messages arrive in the practice's Teams channel as cards; staff reply inline and it reaches the client instantly. AI answers are forwarded and flagged for supervision.</span></span><span class="st st-done">Shipped</span></li>
+        <li><span class="t"><b>TFN handling</b><span>Encrypted with a key held in a vault, ATO checksum validated, never stored or transmitted in plain text.</span></span><span class="st st-done">Shipped</span></li>
+        <li><span class="t"><b>Mobile app</b><span>React Native client for the cashbook, reports and chat.</span></span><span class="st st-done">Shipped</span></li>
+        <li><span class="t"><b>Bank feed import and reconciliation</b><span>CSV statement import with matching. A double-entry implementation exists from an earlier architecture and is being brought forward.</span></span><span class="st st-wip">In progress</span></li>
+        <li><span class="t"><b>Automatic transaction classification</b><span>The assistant currently explains the ledger; the next step is proposing the codes, for human approval.</span></span><span class="st st-wip">Next</span></li>
+        <li><span class="t"><b>Microsoft 365 Copilot agent</b><span>Read-only practice API is built. The agent needs a licensed tenant and admin consent, so it is a designed integration rather than a working one.</span></span><span class="st st-wip">Next</span></li>
+        <li><span class="t"><b>Client MFA and upload virus scanning</b><span>Scoped, with the schema hooks already in place.</span></span><span class="st st-wip">Next</span></li>
+      </ul>
+    </section>
+
+    <div class="grid two even fade-up-3" style="margin-bottom: 24px;">
+      <section class="card card-accent">
+        <div class="section-label">The AI layer</div>
+        <h3>The AI codes it. A qualified human signs it.</h3>
+        <p style="color: var(--muted-light); font-size: 15px;">
+          An assistant that answers from a client's real ledger is only an asset if a
+          practice can defend it to a regulator, a professional body and its own PI
+          insurer. The constraints were designed first and the feature second.
+        </p>
+        <hr class="divider">
+        <ul class="check-list">
+          <li><strong>Consent is a database fact</strong> — timestamped, evidenced, and re-checked when the reply is written, not only when it is requested</li>
+          <li><strong>Answers are attributable</strong> — every AI message is flagged in the database and labelled wherever it appears, so it can never read as the accountant's own words</li>
+          <li><strong>Scope is enforced</strong> — accounting, tax and portal questions only; instructions embedded in a client's message do not change its behaviour</li>
+          <li><strong>Identifiers never leave the country</strong> — TFN, Medicare and account-shaped numbers are masked before any text reaches the model</li>
+          <li><strong>It cannot act</strong> — it reads and explains; it cannot lodge, pay, move money or alter a record</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <div class="section-label">Where the work lives</div>
+        <h3>Microsoft-native, because that is where practices already are.</h3>
+        <p style="color: var(--muted-light); font-size: 15px;">
+          Australian accounting firms run on Microsoft 365. A tool that asks staff to
+          watch another inbox loses to one that appears where they already work — so the
+          practice side of ApexLedger lives in Teams.
+        </p>
+        <hr class="divider">
+        <ul class="check-list">
+          <li>Client messages arrive as cards in the practice channel; staff reply inside the card</li>
+          <li>Every AI answer is forwarded and flagged, so nothing is said in the practice's name unseen</li>
+          <li>No Azure subscription and no bot registration required</li>
+          <li>A read-only practice API is built for a Copilot agent — read-only by design, so an agent driven by natural language cannot alter client records</li>
+        </ul>
+        <p class="small" style="margin-top: 14px;">
+          Copilot serves licensed users inside a firm's tenant, so it cannot serve the
+          firm's clients, who have no licences. Two deliberately different products:
+          Copilot for staff in Teams, the portal assistant for clients.
+        </p>
+      </section>
+    </div>
+
+    <section class="card fade-up-3" style="margin-bottom: 24px;">
+      <div class="section-label">The build-out</div>
+      <h2>What completing it actually takes.</h2>
+      <p style="color: var(--muted-light); font-size: 15px;">
+        The platform is the part that is done. What remains is getting data in, the
+        integrations firms will not work without, and the control layer that makes AI
+        defensible to a professional body. These are numbered because they genuinely
+        depend on each other — later items are not useful without earlier ones.
+      </p>
+      <hr class="divider">
+      <ol class="path">
+        <li>
+          <h4>Automated transaction feeds</h4>
+          <p>Without them there is no AI-driven practice, only a portal with manual entry. Full Consumer Data Right accreditation is slow and costly, so the practical route is an accredited intermediary. This gates everything below it.</p>
+        </li>
+        <li>
+          <h4>Classification with confidence scoring</h4>
+          <p>The model proposes a code and how sure it is. High confidence posts automatically; anything below the threshold queues for a human. This is the labour saving the whole proposition rests on.</p>
+        </li>
+        <li>
+          <h4>Review queue and immutable audit trail</h4>
+          <p>What the model proposed, which version produced it, who approved it, when. Built alongside classification, never after — it is what a PI insurer and a professional body will ask to see, and retrofitting an audit trail is not credible.</p>
+        </li>
+        <li>
+          <h4>Xero and MYOB integration</h4>
+          <p>Practices will not migrate off their ledger. Sitting on top of it as the AI layer is a far easier sale than replacing it, and turns our own cashbook into an internal detail rather than a competing product.</p>
+        </li>
+        <li>
+          <h4>Document capture</h4>
+          <p>Receipts and invoices read into structured data and matched to transactions, with an email intake address for supplier bills. Closes the substantiation gap that costs practices the most chasing.</p>
+        </li>
+        <li>
+          <h4>Enterprise readiness</h4>
+          <p>Entra ID single sign-on, point-in-time backups and a documented recovery plan, penetration testing, and a security questionnaire pack. Mid-tier firms ask for SOC 2 or ISO 27001, a six-to-twelve month exercise worth starting before it is demanded.</p>
+        </li>
+      </ol>
+      <hr class="divider">
+      <p class="callout">
+        <b>Deliberately excluded:</b> lodging returns and activity statements ourselves.
+        That requires Tax Practitioners Board registration and ATO software accreditation.
+        The platform is built so the <b>practice</b> lodges under its own registration,
+        which is both the faster path and the correct one.
+      </p>
+    </section>
+
+    <section class="card fade-up-4" style="margin-bottom: 24px;">
+      <div class="section-label">Stated plainly</div>
+      <h2>What this is not, yet.</h2>
+      <p style="color: var(--muted-light); font-size: 15px;">
+        A brief that only lists strengths is not worth reading. The gaps, so they come
+        from us rather than from due diligence:
+      </p>
+      <hr class="divider">
+      <ul class="check-list">
+        <li><strong>No paying customers to date</strong> — the platform has been built and run against a live dataset, not sold</li>
+        <li><strong>Practice licensing is not priced</strong> — the prices published on this site are for bookkeeping services, a different product</li>
+        <li><strong>Not a registered tax or BAS agent</strong> — ApexLedger does not lodge; the platform is built so the practice using it lodges under its own registration</li>
+        <li><strong>The AI assistant is a demonstration build</strong> and is labelled as such in-product, to every client who uses it</li>
+        <li><strong>Production hosting of the practice portal is being finalised</strong></li>
+      </ul>
+    </section>
+
+    <div class="page-band fade-up-4" style="text-align: center;">
+      <div class="section-label" style="justify-content: center;">Next step</div>
+      <h2>See it running.</h2>
+      <p style="color: var(--muted-light); font-size: 15px; max-width: 520px; margin: 0 auto 22px;">
+        The fastest way to judge this is to use it. Get in touch and we will walk through
+        the portal, the Teams integration and the assistant against a live dataset.
+      </p>
+      <a href="contact.html" class="btn btn-primary">Arrange a walkthrough</a>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="container footer-inner">
+    <div class="footer-brand">Apex<span>Ledger</span></div>
+    <nav style="gap: 16px;">
+      <a href="services.html">Plans</a>
+      <a href="resources.html">Resources</a>
+      <a href="about.html">About</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+    <div class="footer-copy">© 2026 ApexLedger</div>
+  </div>
+</footer>
+
+<script src="matrix.js" defer></script>
+<script src="consent.js" defer></script>
+</body>
+</html>
