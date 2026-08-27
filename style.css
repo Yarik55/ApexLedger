@@ -628,21 +628,21 @@ li { margin: 7px 0; }
 .check-list { list-style: none; padding: 0; margin: 0; }
 
 .check-list li {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
+  position: relative;
+  padding: 5px 0 5px 22px;
   font-size: 14px;
   color: var(--text-secondary);
-  padding: 5px 0;
 }
 
 .check-list li::before {
   content: '✓';
+  position: absolute;
+  left: 0;
+  top: 7px;
   color: var(--blue-bright);
   font-size: 12px;
   font-weight: 700;
-  margin-top: 3px;
-  flex-shrink: 0;
+  line-height: 1;
 }
 
 /* ─── FOOTER ─── */
@@ -794,3 +794,5 @@ nav a.login-link::after { display: none; }
   .btn::after { display: none; }
   .fade-up, .fade-up-2, .fade-up-3, .fade-up-4, .pricing-card { animation: none; }
 }
+
+.check-list li strong { color: var(--text); display: inline; }
